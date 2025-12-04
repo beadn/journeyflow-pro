@@ -682,26 +682,96 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   );
 
   const renderAudienceRulesEditor = () => (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {block.rules.map((rule) => (
-        <div key={rule.id} className="p-3 rounded-lg border border-border bg-muted/30">
+        <div key={rule.id} className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+          {/* Condition row */}
           <div className="flex items-center gap-2 text-sm">
             <span className="text-xs font-semibold text-accent">SI</span>
-            <span className="font-medium capitalize">{rule.condition.attribute}</span>
+            <select
+              value={rule.condition.attribute}
+              onChange={(e) => updateRule(block.id, rule.id, { 
+                condition: { ...rule.condition, attribute: e.target.value } 
+              })}
+              className="h-7 px-2 rounded border border-border bg-background text-xs"
+            >
+              <option value="department">Departamento</option>
+              <option value="location">Ubicación</option>
+              <option value="role">Rol</option>
+              <option value="manager">Manager</option>
+            </select>
             <span className="text-muted-foreground">=</span>
-            <span>{typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}</span>
+            <input
+              type="text"
+              value={typeof rule.condition.value === 'string' ? rule.condition.value : ''}
+              onChange={(e) => updateRule(block.id, rule.id, { 
+                condition: { ...rule.condition, value: e.target.value } 
+              })}
+              placeholder="Valor..."
+              className="flex-1 h-7 px-2 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            />
             <button
               onClick={() => deleteRule(block.id, rule.id)}
-              className="p-1 hover:bg-destructive/10 rounded transition-all ml-auto"
+              className="p-1 hover:bg-destructive/10 rounded transition-all"
             >
               <Trash2 className="w-3 h-3 text-destructive" />
             </button>
           </div>
-          {rule.action.addedTask && (
-            <div className="mt-2 pl-4 text-xs text-muted-foreground">
-              → +1 tarea: {rule.action.addedTask.title}
+          
+          {/* Action & Task editing */}
+          <div className="pl-4 border-l-2 border-accent/30 space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium text-accent">ENTONCES</span>
+              <select
+                value={rule.action.type}
+                onChange={(e) => updateRule(block.id, rule.id, { 
+                  action: { 
+                    ...rule.action, 
+                    type: e.target.value as any,
+                    addedTask: e.target.value === 'add_task' ? (rule.action.addedTask || { title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }) : undefined
+                  } 
+                })}
+                className="h-7 px-2 rounded border border-border bg-background text-xs"
+              >
+                <option value="add_task">Añadir tarea</option>
+                <option value="skip_block">Saltar bloque</option>
+                <option value="override_assignee">Cambiar asignado</option>
+                <option value="change_due_date">Cambiar fecha</option>
+              </select>
             </div>
-          )}
+            
+            {rule.action.type === 'add_task' && (
+              <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background">
+                <input
+                  type="text"
+                  value={rule.action.addedTask?.title || ''}
+                  onChange={(e) => updateRule(block.id, rule.id, { 
+                    action: { 
+                      ...rule.action, 
+                      addedTask: { ...rule.action.addedTask, title: e.target.value } 
+                    } 
+                  })}
+                  placeholder="Título de la tarea..."
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                />
+                <select
+                  value={rule.action.addedTask?.assigneeType || 'employee'}
+                  onChange={(e) => updateRule(block.id, rule.id, { 
+                    action: { 
+                      ...rule.action, 
+                      addedTask: { ...rule.action.addedTask, assigneeType: e.target.value } 
+                    } 
+                  })}
+                  className="h-7 px-2 rounded border border-border bg-background text-xs"
+                >
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  <option value="hr_manager">HR</option>
+                  <option value="it_admin">IT</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
       ))}
       <button
