@@ -24,14 +24,14 @@ const HORIZONTAL_GAP = 80;
 const VERTICAL_GAP = 140;
 const TRIGGER_HEIGHT = 80;
 
-// Custom edge style
+// Custom edge style - using direct colors for ReactFlow compatibility
 const cyanEdgeStyle = {
-  stroke: 'hsl(var(--primary))',
+  stroke: '#06b6d4',
   strokeWidth: 2,
 };
 
 const grayEdgeStyle = {
-  stroke: 'hsl(var(--border))',
+  stroke: '#d1d5db',
   strokeWidth: 2,
   strokeDasharray: '6,6',
 };
@@ -189,15 +189,8 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   }, [onBlockEdit]);
 
   return (
-    <ReactFlowProvider>
-      <div 
-        style={{ 
-          width: '100%', 
-          height: 'calc(100vh - 180px)', 
-          position: 'relative',
-          background: 'hsl(var(--muted) / 0.3)'
-        }}
-      >
+    <div className="w-full h-full relative bg-slate-50" style={{ minHeight: '500px' }}>
+      <ReactFlowProvider>
         <ReactFlow 
           nodes={nodes} 
           edges={edges} 
@@ -207,7 +200,6 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           nodeTypes={nodeTypes}
           fitView 
           fitViewOptions={{ padding: 0.4 }} 
-          style={{ width: '100%', height: '100%' }}
           defaultEdgeOptions={{ 
             type: 'smoothstep',
             style: cyanEdgeStyle,
@@ -215,50 +207,51 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
+          className="w-full h-full"
         >
           <Background 
             variant={BackgroundVariant.Dots} 
             gap={24} 
             size={1} 
-            color="hsl(var(--border))"
+            color="#cbd5e1"
           />
-          <Controls className="!bg-card !border !border-border !rounded-lg !shadow-sm" />
+          <Controls className="!bg-white !border !border-gray-200 !rounded-lg !shadow-sm" />
         </ReactFlow>
-        
-        {/* Action buttons */}
-        <div className="absolute bottom-6 right-6 flex gap-3 z-10">
-          <button 
-            onClick={handleAutoLayout} 
-            className="bg-card border border-border text-foreground px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:shadow-lg hover:bg-muted transition-all font-medium text-sm"
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Auto-ordenar
-          </button>
-          <button 
-            onClick={() => setAddBlockModal(true)} 
-            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-all font-semibold text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Añadir bloque
-          </button>
-        </div>
+      </ReactFlowProvider>
+      
+      {/* Action buttons */}
+      <div className="absolute bottom-6 right-6 flex gap-3 z-10">
+        <button 
+          onClick={handleAutoLayout} 
+          className="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:shadow-lg hover:bg-gray-50 transition-all font-medium text-sm"
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Auto-ordenar
+        </button>
+        <button 
+          onClick={() => setAddBlockModal(true)} 
+          className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-all font-semibold text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Añadir bloque
+        </button>
+      </div>
 
-        {/* Legend */}
-        <div className="absolute bottom-6 left-6 bg-card border border-border rounded-lg shadow-md p-3 z-10">
-          <div className="text-xs font-semibold text-foreground mb-2">Leyenda</div>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-primary rounded"></div>
-              <span className="text-xs text-muted-foreground">Flujo principal</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-border rounded"></div>
-              <span className="text-xs text-muted-foreground">Conexión temporal</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-orange-500 rounded"></div>
-              <span className="text-xs text-muted-foreground">Dependencia</span>
-            </div>
+      {/* Legend */}
+      <div className="absolute bottom-6 left-6 bg-white border border-gray-200 rounded-lg shadow-md p-3 z-10">
+        <div className="text-xs font-semibold text-gray-700 mb-2">Leyenda</div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-0.5 bg-cyan-500 rounded"></div>
+            <span className="text-xs text-gray-500">Flujo principal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-0.5 bg-gray-300 rounded"></div>
+            <span className="text-xs text-gray-500">Conexión temporal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-0.5 bg-orange-500 rounded"></div>
+            <span className="text-xs text-gray-500">Dependencia</span>
           </div>
         </div>
       </div>
@@ -271,6 +264,6 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         periodId={journey.periods[0]?.id || ''}
         onBlockCreated={handleBlockCreated}
       />
-    </ReactFlowProvider>
+    </div>
   );
 }
