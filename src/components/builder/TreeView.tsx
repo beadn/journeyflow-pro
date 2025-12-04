@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { Journey } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
-import { ReactFlow, Node, Edge, Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant } from '@xyflow/react';
+import { ReactFlow, ReactFlowProvider, Node, Edge, Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import { TimeTriggerNode } from './TimeTriggerNode';
@@ -176,40 +176,42 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   }, [journey, blocks, addBlock, onBlockEdit]);
 
   return (
-    <div className="w-full h-full relative" style={{ height: 'calc(100vh - 4rem)' }}>
-      <ReactFlow 
-        nodes={nodes} 
-        edges={edges} 
-        onNodesChange={onNodesChange} 
-        onEdgesChange={onEdgesChange} 
-        onNodeDragStop={onNodeDragStop} 
-        nodeTypes={nodeTypes}
-        fitView 
-        fitViewOptions={{ padding: 0.3 }} 
-        className="bg-muted/30"
-        defaultEdgeOptions={{ type: 'smoothstep' }}
-        minZoom={0.4}
-        maxZoom={1.5}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-50" />
-        <Controls className="!bg-background !border !border-border !rounded-lg !shadow-sm" />
-      </ReactFlow>
-      <div className="absolute bottom-6 right-6 flex gap-2 z-10">
-        <button 
-          onClick={handleAutoLayout} 
-          className="bg-background border border-border text-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:bg-muted transition-all font-medium text-sm"
+    <ReactFlowProvider>
+      <div className="w-full h-full relative">
+        <ReactFlow 
+          nodes={nodes} 
+          edges={edges} 
+          onNodesChange={onNodesChange} 
+          onEdgesChange={onEdgesChange} 
+          onNodeDragStop={onNodeDragStop} 
+          nodeTypes={nodeTypes}
+          fitView 
+          fitViewOptions={{ padding: 0.3 }} 
+          className="bg-muted/30"
+          defaultEdgeOptions={{ type: 'smoothstep' }}
+          minZoom={0.4}
+          maxZoom={1.5}
+          proOptions={{ hideAttribution: true }}
         >
-          <LayoutGrid className="w-4 h-4" />
-          Auto-ordenar
-        </button>
-        <button 
-          onClick={handleAddBlock} 
-          className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm"
-        >
-          + Add Block
-        </button>
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-50" />
+          <Controls className="!bg-background !border !border-border !rounded-lg !shadow-sm" />
+        </ReactFlow>
+        <div className="absolute bottom-6 right-6 flex gap-2 z-10">
+          <button 
+            onClick={handleAutoLayout} 
+            className="bg-background border border-border text-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:bg-muted transition-all font-medium text-sm"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Auto-ordenar
+          </button>
+          <button 
+            onClick={handleAddBlock} 
+            className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm"
+          >
+            + Add Block
+          </button>
+        </div>
       </div>
-    </div>
+    </ReactFlowProvider>
   );
 }

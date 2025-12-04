@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
+import { Clock, Play } from 'lucide-react';
 
 interface TimeTriggerNodeProps {
   data: {
@@ -12,7 +13,13 @@ interface TimeTriggerNodeProps {
 }
 
 export const TimeTriggerNode = memo(({ data }: TimeTriggerNodeProps) => {
-  const { label, isStart } = data;
+  const { label, offsetDays, isStart } = data;
+
+  const formatOffset = () => {
+    if (offsetDays === 0) return 'Day 0';
+    if (offsetDays > 0) return `+${offsetDays} days`;
+    return `${offsetDays} days`;
+  };
 
   return (
     <>
@@ -20,23 +27,36 @@ export const TimeTriggerNode = memo(({ data }: TimeTriggerNodeProps) => {
         <Handle 
           type="target" 
           position={Position.Top} 
-          className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 !rounded-full opacity-0" 
+          className="!w-3 !h-3 !bg-card !border-2 !border-border !rounded-full opacity-0" 
         />
       )}
       
       <div className={cn(
-        "px-6 py-2.5 rounded-full text-sm font-medium border-2 transition-all",
+        "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border-2 transition-all shadow-sm",
         isStart 
-          ? "bg-blue-500 text-white border-blue-500" 
-          : "bg-white text-gray-700 border-gray-300"
+          ? "bg-primary text-primary-foreground border-primary" 
+          : "bg-card text-foreground border-border hover:border-primary/50"
       )}>
-        {isStart ? '+ New action' : label}
+        {isStart ? (
+          <Play className="w-4 h-4" />
+        ) : (
+          <Clock className="w-4 h-4 text-muted-foreground" />
+        )}
+        <span>{isStart ? 'Start' : label}</span>
+        <span className={cn(
+          "text-xs px-2 py-0.5 rounded-full",
+          isStart 
+            ? "bg-primary-foreground/20 text-primary-foreground" 
+            : "bg-muted text-muted-foreground"
+        )}>
+          {formatOffset()}
+        </span>
       </div>
 
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 !rounded-full !-bottom-1.5" 
+        className="!w-3 !h-3 !bg-card !border-2 !border-border !rounded-full !-bottom-1.5" 
       />
     </>
   );
