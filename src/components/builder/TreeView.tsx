@@ -167,7 +167,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
 
   return (
     <ReactFlowProvider>
-      <div className="w-full h-full relative">
+      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
         <ReactFlow 
           nodes={nodes} 
           edges={edges} 
@@ -177,6 +177,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           nodeTypes={nodeTypes}
           fitView 
           fitViewOptions={{ padding: 0.3 }} 
+          style={{ width: '100%', height: '100%' }}
           className="bg-muted/30"
           defaultEdgeOptions={{ type: 'smoothstep' }}
           minZoom={0.4}
@@ -186,7 +187,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-50" />
           <Controls className="!bg-background !border !border-border !rounded-lg !shadow-sm" />
         </ReactFlow>
-        <div className="absolute bottom-6 right-6 flex gap-2 z-10">
+        <div style={{ position: 'absolute', bottom: 24, right: 24, display: 'flex', gap: 8, zIndex: 10 }}>
           <button 
             onClick={handleAutoLayout} 
             className="bg-background border border-border text-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:bg-muted transition-all font-medium text-sm"
