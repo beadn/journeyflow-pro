@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Journey } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { ReactFlow, ReactFlowProvider, Node, Edge, Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import { TimeTriggerNode } from './TimeTriggerNode';
+import { AddBlockModal } from './AddBlockModal';
 import { LayoutGrid } from 'lucide-react';
 
 interface TreeViewProps {
@@ -24,8 +25,9 @@ const VERTICAL_GAP = 100;
 const TRIGGER_HEIGHT = 50;
 
 export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
-  const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition, addBlock } = useJourneyStore();
+  const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition } = useJourneyStore();
   const blocks = getBlocksByJourneyId(journey.id);
+  const [addBlockModal, setAddBlockModal] = useState(false);
   
   const sortedPeriods = useMemo(() => 
     [...journey.periods].sort((a, b) => a.offsetDays - b.offsetDays),
@@ -159,21 +161,9 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
     setEdges(initialEdges);
   }, [blocks, initialNodes, initialEdges, setNodes, setEdges, updateBlockPosition]);
 
-  const handleAddBlock = useCallback(() => {
-    const newBlock = {
-      id: `block-${Date.now()}`, 
-      name: 'New Block', 
-      journeyId: journey.id, 
-      periodId: journey.periods[0]?.id || '', 
-      taskIds: [], 
-      rules: [], 
-      dependencyBlockIds: [], 
-      order: blocks.length, 
-      position: { x: 0, y: 100 + blocks.length * 150 } 
-    };
-    addBlock(newBlock);
-    onBlockEdit(newBlock.id);
-  }, [journey, blocks, addBlock, onBlockEdit]);
+  const handleBlockCreated = useCallback((blockId: string) => {
+    onBlockEdit(blockId);
+  }, [onBlockEdit]);
 
   return (
     <ReactFlowProvider>
@@ -205,13 +195,22 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
             Auto-ordenar
           </button>
           <button 
-            onClick={handleAddBlock} 
+            onClick={() => setAddBlockModal(true)} 
             className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm"
           >
             + Add Block
           </button>
         </div>
       </div>
+
+      {/* Add Block Modal */}
+      <AddBlockModal
+        isOpen={addBlockModal}
+        onClose={() => setAddBlockModal(false)}
+        journeyId={journey.id}
+        periodId={journey.periods[0]?.id || ''}
+        onBlockCreated={handleBlockCreated}
+      />
     </ReactFlowProvider>
   );
 }
