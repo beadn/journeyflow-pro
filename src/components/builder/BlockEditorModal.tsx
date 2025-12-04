@@ -243,57 +243,67 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
             )}
 
             {activeTab === 'rules' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Añade tareas adicionales según las características del empleado.
+                </p>
                 {block.rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="p-4 rounded-lg border border-border bg-background"
+                    className="rounded-lg border border-border bg-muted/30 overflow-hidden"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-accent">IF</span>
-                          <select className="h-8 px-2 rounded border border-border bg-background text-xs">
-                            <option value="department">Department</option>
-                            <option value="location">Location</option>
-                            <option value="role">Role</option>
-                          </select>
-                          <select className="h-8 px-2 rounded border border-border bg-background text-xs">
-                            <option value="equals">equals</option>
-                            <option value="not_equals">not equals</option>
-                            <option value="in">in</option>
-                          </select>
-                          <input
-                            type="text"
-                            placeholder="Value"
-                            className="flex-1 h-8 px-2 rounded border border-border bg-background text-xs"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-primary">THEN</span>
-                          <select className="h-8 px-2 rounded border border-border bg-background text-xs">
-                            <option value="add_task">Add Task</option>
-                            <option value="remove_task">Remove Task</option>
-                            <option value="skip_block">Skip Block</option>
-                            <option value="override_assignee">Override Assignee</option>
-                          </select>
-                        </div>
-                      </div>
+                    {/* Condition Header */}
+                    <div className="p-3 bg-background border-b border-border flex items-center gap-2">
+                      <span className="text-xs font-semibold text-accent uppercase tracking-wide">Si</span>
+                      <select 
+                        defaultValue={rule.condition.attribute}
+                        className="h-7 px-2 rounded border border-border bg-background text-xs font-medium"
+                      >
+                        <option value="department">Departamento</option>
+                        <option value="location">Ubicación</option>
+                        <option value="role">Rol</option>
+                        <option value="contract_type">Tipo de contrato</option>
+                        <option value="seniority">Seniority</option>
+                      </select>
+                      <span className="text-xs text-muted-foreground">=</span>
+                      <input
+                        type="text"
+                        defaultValue={typeof rule.condition.value === 'string' ? rule.condition.value : ''}
+                        placeholder="Valor..."
+                        className="flex-1 h-7 px-2 rounded border border-border bg-background text-xs"
+                      />
                       <button
                         onClick={() => deleteRule(block.id, rule.id)}
-                        className="p-1 hover:bg-danger/10 rounded transition-all"
+                        className="p-1 hover:bg-destructive/10 rounded transition-all ml-auto"
                       >
-                        <Trash2 className="w-4 h-4 text-danger" />
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </button>
+                    </div>
+                    
+                    {/* Additional Tasks */}
+                    <div className="p-3 space-y-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                        Tareas adicionales:
+                      </div>
+                      {rule.action.addedTask && (
+                        <div className="flex items-center gap-2 p-2 rounded bg-background border border-border">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          <span className="text-sm">{rule.action.addedTask.title || 'Nueva tarea'}</span>
+                        </div>
+                      )}
+                      <button className="w-full flex items-center justify-center gap-1.5 p-2 rounded border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        <Plus className="w-3 h-3" />
+                        Añadir tarea condicional
                       </button>
                     </div>
                   </div>
                 ))}
                 <button
                   onClick={handleAddRule}
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Rule
+                  Nueva regla de audiencia
                 </button>
               </div>
             )}
