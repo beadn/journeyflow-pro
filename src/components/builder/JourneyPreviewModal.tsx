@@ -36,6 +36,29 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
     manager: '',
   });
 
+  const evaluateCondition = (rule: BlockRule, conds: EmployeeConditions): boolean => {
+    const attr = rule.condition.attribute;
+    const value = rule.condition.value;
+    const operator = rule.condition.operator;
+    
+    const condValue = conds[attr as keyof EmployeeConditions] || '';
+    
+    if (!condValue || !value) return false;
+
+    switch (operator) {
+      case 'equals':
+        return condValue.toLowerCase() === String(value).toLowerCase();
+      case 'not_equals':
+        return condValue.toLowerCase() !== String(value).toLowerCase();
+      case 'in':
+        return Array.isArray(value) && value.some(v => v.toLowerCase() === condValue.toLowerCase());
+      case 'not_in':
+        return Array.isArray(value) && !value.some(v => v.toLowerCase() === condValue.toLowerCase());
+      default:
+        return false;
+    }
+  };
+
   // Calculate which tasks would execute based on conditions
   const previewData = useMemo(() => {
     return blocks
@@ -81,29 +104,6 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
         };
       });
   }, [blocks, conditions, journey.periods, getTasksByBlockId]);
-
-  const evaluateCondition = (rule: BlockRule, conds: EmployeeConditions): boolean => {
-    const attr = rule.condition.attribute;
-    const value = rule.condition.value;
-    const operator = rule.condition.operator;
-    
-    const condValue = conds[attr as keyof EmployeeConditions] || '';
-    
-    if (!condValue || !value) return false;
-
-    switch (operator) {
-      case 'equals':
-        return condValue.toLowerCase() === String(value).toLowerCase();
-      case 'not_equals':
-        return condValue.toLowerCase() !== String(value).toLowerCase();
-      case 'in':
-        return Array.isArray(value) && value.some(v => v.toLowerCase() === condValue.toLowerCase());
-      case 'not_in':
-        return Array.isArray(value) && !value.some(v => v.toLowerCase() === condValue.toLowerCase());
-      default:
-        return false;
-    }
-  };
 
   const totalTaskCount = previewData.reduce((sum, p) => sum + p.totalTasks, 0);
   const activeBlocks = previewData.filter(p => !p.skippedBlock.skip).length;
