@@ -171,161 +171,213 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
     </>
   );
 
-  // TREE VIEW
-  const totalBranches = 1 + block.rules.length; // "Todos" + rules
-  const branchWidth = 120;
-  const treeWidth = Math.max(400, totalBranches * branchWidth + 60);
+  // TREE VIEW - Clean style like reference
+  const totalBranches = block.rules.length;
+  const branchSpacing = 200;
+  const treeWidth = Math.max(500, (totalBranches + 1) * branchSpacing);
   const centerX = treeWidth / 2;
   
   const renderTreeView = () => (
-    <div className="flex h-[500px]">
+    <div className="flex h-[550px]">
       {/* Tree Visualization */}
-      <div className="w-1/2 border-r border-border bg-gradient-to-b from-muted/10 to-muted/30 overflow-auto">
-        <div className="relative p-6" style={{ minWidth: treeWidth, minHeight: 400 }}>
+      <div className="w-1/2 border-r border-border overflow-auto" style={{ background: '#f8fafb' }}>
+        <div className="relative p-8 pb-16" style={{ minWidth: treeWidth, minHeight: 500 }}>
+          
           {/* SVG Connectors */}
           <svg 
             className="absolute inset-0 pointer-events-none" 
-            style={{ width: treeWidth, height: 400 }}
+            style={{ width: '100%', height: '100%', minWidth: treeWidth }}
           >
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(var(--border))" />
-                <stop offset="100%" stopColor="hsl(var(--muted-foreground) / 0.3)" />
-              </linearGradient>
-              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(var(--accent))" />
-                <stop offset="100%" stopColor="hsl(var(--accent) / 0.5)" />
-              </linearGradient>
-            </defs>
-            
-            {/* Main block to decision connector */}
-            <path
-              d={`M ${centerX} 52 L ${centerX} 80`}
-              stroke="url(#lineGradient)"
+            {/* Main block to condition connector */}
+            <line
+              x1={centerX} y1={145}
+              x2={centerX} y2={200}
+              stroke="#e5e7eb"
               strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
+            />
+            {/* Circle connector after main block */}
+            <circle cx={centerX} cy={145} r={6} fill="white" stroke="#e5e7eb" strokeWidth="2" />
+            
+            {/* Condition to plus button connector */}
+            <line
+              x1={centerX} y1={285}
+              x2={centerX} y2={320}
+              stroke="#e5e7eb"
+              strokeWidth="2"
             />
             
-            {/* Decision to branches connectors */}
-            {Array.from({ length: totalBranches }).map((_, index) => {
-              const branchX = centerX + (index - (totalBranches - 1) / 2) * branchWidth;
-              const startY = 140;
-              const endY = 200;
-              const controlOffset = 30;
-              
+            {/* Plus button to branches vertical line */}
+            <line
+              x1={centerX} y1={355}
+              x2={centerX} y2={390}
+              stroke="#22d3ee"
+              strokeWidth="2"
+            />
+            
+            {/* Horizontal line connecting branches */}
+            {totalBranches > 0 && (
+              <line
+                x1={centerX - (totalBranches * branchSpacing) / 2}
+                y1={390}
+                x2={centerX + (totalBranches * branchSpacing) / 2}
+                stroke="#22d3ee"
+                strokeWidth="2"
+              />
+            )}
+            
+            {/* Curved connectors to each branch */}
+            {block.rules.map((_, index) => {
+              const branchX = centerX + (index - (totalBranches - 1) / 2) * branchSpacing;
               return (
-                <path
-                  key={index}
-                  d={`M ${centerX} ${startY} 
-                      C ${centerX} ${startY + controlOffset}, 
-                        ${branchX} ${endY - controlOffset}, 
-                        ${branchX} ${endY}`}
-                  stroke={index === 0 ? "url(#lineGradient)" : "url(#accentGradient)"}
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  className="transition-all duration-300"
-                  style={{ opacity: 0.8 }}
-                />
+                <g key={index}>
+                  {/* Vertical drop to branch */}
+                  <path
+                    d={`M ${branchX} 390 
+                        Q ${branchX} 410, ${branchX} 430`}
+                    stroke="#22d3ee"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  {/* Circle at branch end */}
+                  <circle cx={branchX} cy={490} r={5} fill="white" stroke="#22d3ee" strokeWidth="2" />
+                </g>
               );
             })}
           </svg>
 
           {/* Nodes */}
           <div className="relative flex flex-col items-center" style={{ width: treeWidth }}>
-            {/* Main Block Node */}
+            
+            {/* Main Block Card */}
             <button
               onClick={() => setSelectedNode('block')}
               className={cn(
-                "relative z-10 px-5 py-3 rounded-xl text-sm font-medium shadow-lg min-w-[180px] text-center transition-all border-2 backdrop-blur-sm",
+                "relative z-10 bg-white rounded-xl shadow-sm border text-left transition-all min-w-[280px] max-w-[320px]",
                 selectedNode === 'block'
-                  ? "bg-primary text-primary-foreground border-primary ring-4 ring-primary/20 scale-105"
-                  : "bg-background/95 border-border hover:border-primary/50 hover:shadow-xl"
+                  ? "border-primary ring-2 ring-primary/20 shadow-md"
+                  : "border-gray-200 hover:shadow-md hover:border-gray-300"
               )}
             >
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Settings className="w-4 h-4" />
-                <span className="truncate max-w-[140px]">{block.name}</span>
+              <div className="p-4">
+                <div className="text-sm font-semibold text-gray-900 mb-1">{tasks.length} tareas</div>
+                <div className="text-xs text-gray-500 mb-3">Tareas base del bloque</div>
+                
+                {/* Task list preview */}
+                <div className="space-y-2">
+                  {tasks.slice(0, 2).map((task) => (
+                    <div key={task.id} className="flex items-start gap-2">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-sm text-gray-800">{task.title}</div>
+                        <div className="text-xs text-gray-400">Asignado: {task.assigneeType}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {tasks.length > 2 && (
+                    <div className="text-xs text-gray-400 pl-4">+{tasks.length - 2} más...</div>
+                  )}
+                </div>
               </div>
-              <div className="text-xs opacity-70">{tasks.length} tareas • {block.dependencyBlockIds.length} deps</div>
+              
+              {/* Add action button */}
+              <div className="border-t border-gray-100 p-2">
+                <div className="text-xs text-gray-400 text-center hover:text-gray-600 cursor-pointer">
+                  + Nueva tarea
+                </div>
+              </div>
             </button>
 
-            {/* Decision Node (Diamond) */}
-            <div className="mt-8 relative z-10">
+            {/* Condition Card */}
+            <div className="mt-14 relative z-10">
               <button
                 onClick={() => setSelectedNode('decision')}
                 className={cn(
-                  "w-16 h-16 rotate-45 flex items-center justify-center transition-all border-2 shadow-lg backdrop-blur-sm",
+                  "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[260px]",
                   selectedNode === 'decision'
-                    ? "bg-accent border-accent ring-4 ring-accent/20 scale-110"
-                    : "bg-background/95 border-border hover:border-accent/50 hover:shadow-xl"
+                    ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
+                    : "border-gray-200 hover:shadow-md hover:border-gray-300"
                 )}
               >
-                <span className={cn(
-                  "-rotate-45 text-sm font-bold",
-                  selectedNode === 'decision' ? "text-accent-foreground" : "text-muted-foreground"
-                )}>
-                  ?
-                </span>
+                {/* Badge */}
+                <div className="absolute -top-3 left-4">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-medium">
+                    <Users className="w-3 h-3" />
+                    Condición
+                  </span>
+                </div>
+                
+                <div className="p-4 pt-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">Condición</div>
+                      <div className="text-xs text-gray-500">Define rutas según condiciones</div>
+                    </div>
+                    <span className="text-xs text-gray-400">Step 2</span>
+                  </div>
+                </div>
               </button>
             </div>
 
-            {/* Branch Nodes */}
-            <div className="flex justify-center mt-16 relative z-10" style={{ gap: branchWidth - 100 }}>
-              {/* Default Branch (All) */}
-              <div 
-                className="flex flex-col items-center"
-                style={{ width: 100 }}
-              >
-                <div className="px-3 py-2.5 rounded-xl border-2 border-border bg-background/95 text-xs min-w-[100px] text-center shadow-md backdrop-blur-sm hover:shadow-lg transition-all">
-                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-                    <Users className="w-3.5 h-3.5" />
-                    <span className="font-semibold">Todos</span>
-                  </div>
-                  <div className="text-foreground font-medium">{tasks.length} tareas</div>
-                </div>
-              </div>
-
-              {/* Rule Branches */}
-              {block.rules.map((rule) => (
-                <div 
-                  key={rule.id} 
-                  className="flex flex-col items-center"
-                  style={{ width: 100 }}
-                >
-                  <button
-                    onClick={() => setSelectedNode(`rule-${rule.id}`)}
-                    className={cn(
-                      "px-3 py-2.5 rounded-xl border-2 text-xs min-w-[100px] text-center transition-all shadow-md backdrop-blur-sm",
-                      selectedNode === `rule-${rule.id}`
-                        ? "border-accent bg-accent/15 ring-4 ring-accent/20 scale-105 shadow-lg"
-                        : "border-accent/40 bg-accent/5 hover:border-accent hover:shadow-lg"
-                    )}
-                  >
-                    <div className="flex items-center justify-center gap-1.5 text-accent mb-1">
-                      <GitBranch className="w-3.5 h-3.5" />
-                      <span className="font-semibold capitalize truncate">{rule.condition.attribute}</span>
-                    </div>
-                    <div className="text-muted-foreground text-[10px] truncate">
-                      = {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Add Rule Button */}
+            {/* Plus Button */}
             <button
               onClick={() => {
                 handleAddRule();
                 setSelectedNode('decision');
               }}
-              className="mt-6 relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-accent/40 text-xs text-accent hover:bg-accent/10 hover:border-accent transition-all"
+              className="mt-8 relative z-10 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:border-cyan-400 hover:text-cyan-500 transition-all shadow-sm"
             >
-              <Plus className="w-3 h-3" />
-              Nueva rama
+              <Plus className="w-4 h-4" />
             </button>
+
+            {/* Branch Cards */}
+            {totalBranches > 0 && (
+              <div className="mt-16 flex justify-center relative z-10" style={{ gap: branchSpacing - 180 }}>
+                {block.rules.map((rule) => (
+                  <button
+                    key={rule.id}
+                    onClick={() => setSelectedNode(`rule-${rule.id}`)}
+                    className={cn(
+                      "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[180px] p-3",
+                      selectedNode === `rule-${rule.id}`
+                        ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
+                        : "border-gray-200 hover:shadow-md hover:border-gray-300"
+                    )}
+                  >
+                    <div className="text-xs text-gray-600 mb-2">
+                      <span className="capitalize font-medium">{rule.condition.attribute}</span>
+                      <span className="text-gray-400"> es igual a: </span>
+                      <span className="text-cyan-600 font-medium">
+                        {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <Users className="w-3 h-3" />
+                      <span>{rule.action.addedTask ? '1' : '0'}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Branch end circles with plus */}
+            {totalBranches > 0 && (
+              <div className="mt-4 flex justify-center relative z-10" style={{ gap: branchSpacing - 30 }}>
+                {block.rules.map((rule) => (
+                  <div key={rule.id} className="flex flex-col items-center">
+                    <button className="w-6 h-6 rounded-full bg-white border-2 border-cyan-300 flex items-center justify-center text-cyan-500 hover:bg-cyan-50 transition-all shadow-sm">
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {totalBranches === 0 && (
+              <div className="mt-8 text-center text-xs text-gray-400">
+                Haz clic en + para añadir una condición
+              </div>
+            )}
           </div>
         </div>
       </div>
