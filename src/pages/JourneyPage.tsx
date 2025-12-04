@@ -250,7 +250,7 @@ export default function JourneyPage() {
             {builderView === 'timeline' ? (
               <TimelineView journey={journey} onBlockEdit={handleBlockEdit} />
             ) : (
-              <div className="h-full w-full">
+              <div className="h-full w-full" style={{ minHeight: '500px' }}>
                 <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
               </div>
             )}
