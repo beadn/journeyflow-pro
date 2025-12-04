@@ -1,21 +1,20 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Block, BlockMetrics } from '@/types/journey';
+import { Block } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Users, Plus } from 'lucide-react';
+import { CheckCircle2, Plus } from 'lucide-react';
 
 interface BlockNodeProps {
   data: { 
     block: Block; 
     onEdit: () => void; 
-    metrics: BlockMetrics;
     stepNumber?: number;
   };
 }
 
 export const BlockNode = memo(({ data }: BlockNodeProps) => {
-  const { block, onEdit, metrics, stepNumber } = data;
+  const { block, onEdit, stepNumber } = data;
   const { getTasksByBlockId } = useJourneyStore();
   const tasks = getTasksByBlockId(block.id);
 
@@ -109,20 +108,15 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
           )}
 
           {/* Footer stats */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              {tasks.length > 0 && (
-                <span className="font-medium">{tasks.length} tasks</span>
-              )}
-              {block.rules.length > 0 && (
-                <span className="text-teal-600 font-medium">{block.rules.length} rules</span>
-              )}
-            </div>
-            {metrics.employeesInBlock > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Users className="w-3.5 h-3.5" />
-                <span>{metrics.employeesInBlock}</span>
-              </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-100 text-xs text-gray-500">
+            {tasks.length > 0 && (
+              <span className="font-medium">{tasks.length} tasks</span>
+            )}
+            {block.rules.length > 0 && (
+              <span className="text-teal-600 font-medium">{block.rules.length} rules</span>
+            )}
+            {block.expectedDurationDays && (
+              <span>{block.expectedDurationDays}d SLA</span>
             )}
           </div>
         </div>
