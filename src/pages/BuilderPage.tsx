@@ -14,6 +14,7 @@ import {
   Copy,
   Trash2,
   MoreHorizontal,
+  ArrowLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -88,14 +89,17 @@ export default function BuilderPage() {
       {/* Header */}
       <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-foreground">Journey Builder</h1>
+          <button
+            onClick={() => navigate('/workflows')}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
           
-          <JourneySelector
-            journeys={journeys}
-            selectedId={selectedJourneyId}
-            onSelect={handleJourneySelect}
-            onCreate={() => setIsCreateJourneyOpen(true)}
-          />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{selectedJourney?.name || 'Journey Builder'}</h1>
+            <p className="text-xs text-muted-foreground">Builder</p>
+          </div>
 
           {selectedJourney && (
             <span className={cn(

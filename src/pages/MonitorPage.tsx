@@ -1,24 +1,29 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { MonitorByEmployee } from '@/components/monitor/MonitorByEmployee';
 import { MonitorByJourney } from '@/components/monitor/MonitorByJourney';
 import { MonitorByBlock } from '@/components/monitor/MonitorByBlock';
 import { JourneyHealthOverview } from '@/components/monitor/JourneyHealthOverview';
 import { cn } from '@/lib/utils';
-import { Users, GitBranch, LayoutGrid, BarChart3 } from 'lucide-react';
+import { Users, GitBranch, LayoutGrid, BarChart3, ArrowLeft } from 'lucide-react';
 
 type MonitorView = 'overview' | 'employee' | 'journey' | 'block';
 
 export default function MonitorPage() {
-  const { view: urlView } = useParams();
-  const [activeView, setActiveView] = useState<MonitorView>(
-    (urlView as MonitorView) || 'overview'
-  );
-  const { journeys } = useJourneyStore();
-  const [selectedJourneyId, setSelectedJourneyId] = useState<string | null>(
-    journeys[0]?.id || null
-  );
+  const { journeyId } = useParams();
+  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState<MonitorView>('overview');
+  const { journeys, getJourneyById } = useJourneyStore();
+  
+  const journey = journeyId ? getJourneyById(journeyId) : null;
+
+  // Redirect if journey not found
+  useEffect(() => {
+    if (journeyId && !journey) {
+      navigate('/workflows');
+    }
+  }, [journeyId, journey, navigate]);
 
   const views = [
     { id: 'overview' as const, label: 'Health Overview', icon: BarChart3 },
@@ -27,24 +32,25 @@ export default function MonitorPage() {
     { id: 'block' as const, label: 'By Block', icon: LayoutGrid },
   ];
 
+  if (!journey) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-foreground">Journey Monitor</h1>
-          
-          {/* Journey filter */}
-          <select
-            value={selectedJourneyId || ''}
-            onChange={(e) => setSelectedJourneyId(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          <button
+            onClick={() => navigate('/workflows')}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
-            <option value="">All Journeys</option>
-            {journeys.map((j) => (
-              <option key={j.id} value={j.id}>{j.name}</option>
-            ))}
-          </select>
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{journey.name}</h1>
+            <p className="text-xs text-muted-foreground">Monitor</p>
+          </div>
         </div>
 
         {/* View tabs */}
@@ -69,27 +75,17 @@ export default function MonitorPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        {activeView === 'overview' && selectedJourneyId && (
-          <JourneyHealthOverview journeyId={selectedJourneyId} />
-        )}
-        {activeView === 'overview' && !selectedJourneyId && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Select a journey to view health overview</p>
-          </div>
+        {activeView === 'overview' && (
+          <JourneyHealthOverview journeyId={journeyId!} />
         )}
         {activeView === 'employee' && (
-          <MonitorByEmployee journeyId={selectedJourneyId} />
+          <MonitorByEmployee journeyId={journeyId!} />
         )}
         {activeView === 'journey' && (
           <MonitorByJourney />
         )}
-        {activeView === 'block' && selectedJourneyId && (
-          <MonitorByBlock journeyId={selectedJourneyId} />
-        )}
-        {activeView === 'block' && !selectedJourneyId && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Select a journey to view block metrics</p>
-          </div>
+        {activeView === 'block' && (
+          <MonitorByBlock journeyId={journeyId!} />
         )}
       </div>
     </div>
