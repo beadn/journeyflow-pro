@@ -244,15 +244,13 @@ export default function JourneyPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden" style={{ height: 'calc(100vh - 140px)' }}>
         {mainTab === 'builder' && (
           <>
             {builderView === 'timeline' ? (
               <TimelineView journey={journey} onBlockEdit={handleBlockEdit} />
             ) : (
-              <div className="h-full w-full" style={{ minHeight: '500px' }}>
-                <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
-              </div>
+              <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
             )}
           </>
         )}
