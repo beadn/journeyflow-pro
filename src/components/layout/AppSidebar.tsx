@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   Users, 
@@ -10,11 +10,6 @@ import {
 
 export function AppSidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
-  const location = useLocation();
-
-  const isActive = location.pathname.startsWith('/workflows') || 
-                   location.pathname.startsWith('/builder') || 
-                   location.pathname.startsWith('/monitor');
 
   return (
     <>
@@ -34,9 +29,9 @@ export function AppSidebar() {
           !isExpanded && "overflow-hidden lg:overflow-visible"
         )}
       >
-        {/* Logo */}
+        {/* Logo - links to workflows */}
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-          <NavLink to="/" className="flex items-center gap-3">
+          <NavLink to="/workflows" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Users className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -46,23 +41,8 @@ export function AppSidebar() {
           </NavLink>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1">
-          <NavLink
-            to="/workflows"
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-              isExpanded ? "justify-start" : "justify-center",
-              isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}
-            title="Employee Lifecycle"
-          >
-            <Users className="w-5 h-5" />
-            {isExpanded && <span className="text-sm font-medium">Employee Lifecycle</span>}
-          </NavLink>
-        </nav>
+        {/* Empty nav - could add more sections in the future */}
+        <nav className="flex-1 p-3" />
 
         {/* Collapse button */}
         <div className="p-3 border-t border-sidebar-border hidden lg:block">
