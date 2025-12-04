@@ -82,11 +82,7 @@ export interface RuleCondition {
 
 export type RuleActionType = 
   | "add_task" 
-  | "remove_task" 
-  | "override_assignee" 
-  | "skip_block" 
-  | "change_due_date" 
-  | "require_approval";
+  | "add_block";
 
 export interface RuleAction {
   type: RuleActionType;
@@ -95,6 +91,7 @@ export interface RuleAction {
   newDueOffsetDays?: number;
   addedTask?: Partial<Task>;
   addedTasks?: Partial<Task>[];
+  addedBlockTemplateId?: string;
 }
 
 // Employee and Progress Tracking

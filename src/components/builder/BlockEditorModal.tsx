@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Block, Task, BlockRule } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Plus, Trash2, GripVertical, List, GitBranch, Users, Bell, Link2, Settings, Diamond } from 'lucide-react';
+import { Plus, Trash2, GripVertical, List, GitBranch, Users, Bell, Link2, Settings, Diamond, FileText, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { blockTemplates } from '@/lib/blockTemplates';
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Node,
+  Edge,
+  Handle,
+  Position,
+  Background,
+  BackgroundVariant,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
 interface BlockEditorModalProps {
   isOpen: boolean;
@@ -12,6 +24,166 @@ interface BlockEditorModalProps {
 }
 
 type TreeNodeSelection = 'block' | 'decision' | `rule-${string}`;
+
+// Custom node components for ReactFlow
+const TasksNode = ({ data }: { data: { tasks: Task[]; selected: boolean; onClick: () => void } }) => (
+  <div 
+    onClick={data.onClick}
+    className={cn(
+      "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[260px] max-w-[300px] cursor-pointer hover:scale-[1.02]",
+      data.selected
+        ? "border-cyan-400 ring-2 ring-cyan-200 shadow-lg"
+        : "border-gray-200 hover:shadow-md hover:border-gray-300"
+    )}
+  >
+    <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" />
+    <div className="p-4">
+      <div className="flex items-center gap-2 mb-1">
+        <FileText className="w-4 h-4 text-cyan-500" />
+        <div className="text-sm font-semibold text-gray-900">{data.tasks.length} tareas</div>
+      </div>
+      <div className="text-xs text-gray-500 mb-3">Tareas base del bloque</div>
+      <div className="space-y-2">
+        {data.tasks.slice(0, 3).map((task) => (
+          <div key={task.id} className="flex items-start gap-2">
+            <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
+            <div className="text-xs text-gray-700 truncate">{task.title}</div>
+          </div>
+        ))}
+        {data.tasks.length > 3 && (
+          <div className="text-xs text-gray-400 pl-4">+{data.tasks.length - 3} más...</div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const ConditionNode = ({ data }: { data: { selected: boolean; onClick: () => void; rulesCount: number } }) => (
+  <div 
+    onClick={data.onClick}
+    className={cn(
+      "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[240px] cursor-pointer relative",
+      data.selected
+        ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
+        : "border-gray-200 hover:shadow-md hover:border-gray-300"
+    )}
+  >
+    <Handle type="target" position={Position.Top} className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" />
+    <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" />
+    <div className="absolute -top-3 left-4">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-medium">
+        <Diamond className="w-3 h-3" />
+        Condición
+      </span>
+    </div>
+    <div className="p-4 pt-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold text-gray-900">Reglas de audiencia</div>
+          <div className="text-xs text-gray-500">{data.rulesCount} regla{data.rulesCount !== 1 ? 's' : ''} definida{data.rulesCount !== 1 ? 's' : ''}</div>
+        </div>
+        <Users className="w-5 h-5 text-cyan-400" />
+      </div>
+    </div>
+  </div>
+);
+
+const RuleNode = ({ data }: { data: { rule: BlockRule; selected: boolean; onClick: () => void } }) => (
+  <div 
+    onClick={data.onClick}
+    className={cn(
+      "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[220px] max-w-[260px] cursor-pointer",
+      data.selected
+        ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
+        : "border-gray-200 hover:shadow-md hover:border-gray-300"
+    )}
+  >
+    <Handle type="target" position={Position.Top} className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" />
+    <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-3 !h-3 !border-2 !border-white" />
+    <div className="p-3">
+      <div className="text-xs text-gray-600 mb-2">
+        <span className="font-medium text-cyan-600">SI</span>
+        <span className="capitalize"> {data.rule.condition.attribute}</span>
+        <span className="text-gray-400"> = </span>
+        <span className="text-cyan-600 font-medium">
+          {typeof data.rule.condition.value === 'string' ? data.rule.condition.value || '...' : '...'}
+        </span>
+      </div>
+      <div className="text-xs text-gray-500 font-medium">
+        → {data.rule.action.type === 'add_task' ? 'Añadir tareas' : 'Añadir bloque'}
+      </div>
+    </div>
+  </div>
+);
+
+// Node to show added tasks from a rule
+const AddedTasksNode = ({ data }: { data: { tasks: Partial<Task>[]; blockTemplateName?: string; actionType: string } }) => (
+  <div className="bg-emerald-50 rounded-xl shadow-sm border border-emerald-200 min-w-[200px] max-w-[240px]">
+    <Handle type="target" position={Position.Top} className="!bg-emerald-400 !w-3 !h-3 !border-2 !border-white" />
+    <div className="p-3">
+      {data.actionType === 'add_task' ? (
+        <>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
+              <FileText className="w-3 h-3 text-emerald-600" />
+            </div>
+            <span className="text-xs font-semibold text-emerald-700">
+              {data.tasks.length} tarea{data.tasks.length !== 1 ? 's' : ''} añadida{data.tasks.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="space-y-1">
+            {data.tasks.slice(0, 3).map((task, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-xs text-emerald-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="truncate">{task.title || 'Sin título'}</span>
+              </div>
+            ))}
+            {data.tasks.length > 3 && (
+              <div className="text-xs text-emerald-500 pl-3">+{data.tasks.length - 3} más</div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
+              <Layers className="w-3 h-3 text-emerald-600" />
+            </div>
+            <span className="text-xs font-semibold text-emerald-700">Bloque añadido</span>
+          </div>
+          <div className="text-xs text-emerald-600 truncate">
+            {data.blockTemplateName || 'Sin seleccionar'}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+const AddRuleNode = ({ data }: { data: { onClick: () => void } }) => (
+  <div className="relative">
+    <Handle type="target" position={Position.Top} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-top-1" />
+    <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-bottom-1" />
+    <button 
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        data.onClick();
+      }}
+      className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-cyan-300 flex items-center justify-center text-cyan-400 hover:border-cyan-400 hover:text-cyan-500 hover:bg-cyan-50 transition-all shadow-sm cursor-pointer"
+    >
+      <Plus className="w-4 h-4" />
+    </button>
+  </div>
+);
+
+const nodeTypes = {
+  tasksNode: TasksNode,
+  conditionNode: ConditionNode,
+  ruleNode: RuleNode,
+  addRuleNode: AddRuleNode,
+  addedTasksNode: AddedTasksNode,
+};
 
 export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalProps) {
   const { 
@@ -36,6 +208,189 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   const [blockViewMode, setBlockViewMode] = useState<'inline' | 'tree'>('inline');
   const [selectedNode, setSelectedNode] = useState<TreeNodeSelection>('block');
   const [activeInlineTab, setActiveInlineTab] = useState<'tasks' | 'deps' | 'notifications'>('tasks');
+
+  // Handler for adding rules (needs to be before useMemo that uses it)
+  const handleAddRuleFromTree = useCallback(() => {
+    if (!block) return;
+    const newRule: BlockRule = {
+      id: `rule-${Date.now()}`,
+      label: 'Nueva regla',
+      condition: { attribute: 'department', operator: 'equals', value: '' },
+      action: { type: 'add_task', addedTasks: [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }] },
+    };
+    addRule(block.id, newRule);
+    setSelectedNode('decision');
+  }, [block, addRule]);
+
+  // TREE VIEW - Using ReactFlow (hooks must be before early return)
+  const treeNodes = useMemo((): Node[] => {
+    if (!block) return [];
+    const nodes: Node[] = [];
+    const centerX = 300;
+    const ruleSpacing = 250;
+    
+    // Tasks node (top)
+    nodes.push({
+      id: 'tasks-node',
+      type: 'tasksNode',
+      position: { x: centerX - 130, y: 0 },
+      data: { 
+        tasks, 
+        selected: selectedNode === 'block',
+        onClick: () => setSelectedNode('block')
+      },
+      draggable: false,
+    });
+    
+    // Condition node (middle)
+    nodes.push({
+      id: 'condition-node',
+      type: 'conditionNode',
+      position: { x: centerX - 120, y: 180 },
+      data: { 
+        selected: selectedNode === 'decision',
+        onClick: () => setSelectedNode('decision'),
+        rulesCount: block.rules.length
+      },
+      draggable: false,
+    });
+    
+    // Rule nodes (bottom branches) and their added tasks/blocks
+    const totalRules = block.rules.length;
+    
+    // Only show add button if there are rules, position it in the flow
+    if (totalRules > 0) {
+      // Add rule button node - positioned to the side
+      nodes.push({
+        id: 'add-rule-node',
+        type: 'addRuleNode',
+        position: { x: centerX - 16, y: 290 },
+        data: { 
+          onClick: handleAddRuleFromTree
+        },
+        draggable: false,
+      });
+    }
+    
+    block.rules.forEach((rule, index) => {
+      const xOffset = (index - (totalRules - 1) / 2) * ruleSpacing;
+      const ruleX = centerX - 110 + xOffset;
+      
+      // Rule node
+      nodes.push({
+        id: `rule-${rule.id}`,
+        type: 'ruleNode',
+        position: { x: ruleX, y: 380 },
+        data: { 
+          rule,
+          selected: selectedNode === `rule-${rule.id}`,
+          onClick: () => setSelectedNode(`rule-${rule.id}`)
+        },
+        draggable: false,
+      });
+      
+      // Added tasks/block node below each rule
+      const addedTasks = rule.action.addedTasks || (rule.action.addedTask ? [rule.action.addedTask] : []);
+      const blockTemplate = rule.action.addedBlockTemplateId 
+        ? blockTemplates.find(t => t.id === rule.action.addedBlockTemplateId)
+        : null;
+      
+      if (addedTasks.length > 0 || blockTemplate) {
+        nodes.push({
+          id: `added-${rule.id}`,
+          type: 'addedTasksNode',
+          position: { x: ruleX, y: 490 },
+          data: { 
+            tasks: addedTasks,
+            blockTemplateName: blockTemplate?.name,
+            actionType: rule.action.type
+          },
+          draggable: false,
+        });
+      }
+    });
+    
+    // If no rules, show add button below condition
+    if (totalRules === 0) {
+      nodes.push({
+        id: 'add-rule-node',
+        type: 'addRuleNode',
+        position: { x: centerX - 16, y: 290 },
+        data: { 
+          onClick: handleAddRuleFromTree
+        },
+        draggable: false,
+      });
+    }
+    
+    return nodes;
+  }, [tasks, block, selectedNode, handleAddRuleFromTree]);
+
+  const treeEdges = useMemo((): Edge[] => {
+    if (!block) return [];
+    const edges: Edge[] = [];
+    
+    // Tasks to condition
+    edges.push({
+      id: 'tasks-to-condition',
+      source: 'tasks-node',
+      target: 'condition-node',
+      type: 'smoothstep',
+      style: { stroke: '#22d3ee', strokeWidth: 2 },
+      animated: true,
+    });
+    
+    const totalRules = block.rules.length;
+    
+    if (totalRules === 0) {
+      // If no rules, connect condition to add button
+      edges.push({
+        id: 'condition-to-add',
+        source: 'condition-node',
+        target: 'add-rule-node',
+        type: 'smoothstep',
+        style: { stroke: '#d1d5db', strokeWidth: 2, strokeDasharray: '5,5' },
+      });
+    } else {
+      // Connect condition to add button
+      edges.push({
+        id: 'condition-to-add',
+        source: 'condition-node',
+        target: 'add-rule-node',
+        type: 'smoothstep',
+        style: { stroke: '#d1d5db', strokeWidth: 2, strokeDasharray: '5,5' },
+      });
+      
+      // Connect add button to each rule
+      block.rules.forEach((rule) => {
+        edges.push({
+          id: `add-to-rule-${rule.id}`,
+          source: 'add-rule-node',
+          target: `rule-${rule.id}`,
+          type: 'smoothstep',
+          style: { stroke: '#22d3ee', strokeWidth: 2 },
+          animated: true,
+        });
+        
+        // Rule to added tasks/block (if exists)
+        const addedTasks = rule.action.addedTasks || (rule.action.addedTask ? [rule.action.addedTask] : []);
+        const hasBlockTemplate = !!rule.action.addedBlockTemplateId;
+        
+        if (addedTasks.length > 0 || hasBlockTemplate) {
+          edges.push({
+            id: `rule-to-added-${rule.id}`,
+            source: `rule-${rule.id}`,
+            target: `added-${rule.id}`,
+            type: 'smoothstep',
+            style: { stroke: '#10b981', strokeWidth: 2 },
+            animated: true,
+          });
+        }
+      });
+    }
+    
+    return edges;
+  }, [block]);
 
   if (!block || !journey) return null;
 
@@ -170,442 +525,102 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       </div>
     </>
   );
-
-  // TREE VIEW - Clean style like reference
-  const totalBranches = block.rules.length;
-  const branchSpacing = 180;
-  const treeWidth = Math.max(500, (totalBranches + 1) * branchSpacing);
-  const centerX = treeWidth / 2;
   
   const renderTreeView = () => (
     <div className="flex h-[550px]">
-      {/* Tree Visualization */}
-      <div className="w-1/2 border-r border-border overflow-auto" style={{ background: '#f8fafb' }}>
-        <div className="relative p-8 pb-16" style={{ minWidth: treeWidth, minHeight: 520 }}>
-          
-          {/* SVG Connectors with smooth Bézier curves */}
-          <svg 
-            className="absolute inset-0 pointer-events-none" 
-            style={{ width: '100%', height: '100%', minWidth: treeWidth }}
-          >
-            <defs>
-              {/* Animated gradient for active paths */}
-              <linearGradient id="flowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3">
-                  <animate attributeName="stopOpacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
-                </stop>
-                <stop offset="50%" stopColor="#22d3ee" stopOpacity="1">
-                  <animate attributeName="offset" values="0.3;0.5;0.7;0.5;0.3" dur="3s" repeatCount="indefinite" />
-                </stop>
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3">
-                  <animate attributeName="stopOpacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
-                </stop>
-              </linearGradient>
-              
-              {/* Glow filter */}
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              
-              {/* Pulse animation for circles */}
-              <radialGradient id="pulseGradient">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            
-            {/* Main block to condition - smooth vertical with curve hint */}
-            <path
-              d={`M ${centerX} 145 
-                  C ${centerX} 160, ${centerX} 185, ${centerX} 200`}
-              stroke="#d1d5db"
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-            />
-            
-            {/* Animated circle connector after main block */}
-            <g>
-              <circle cx={centerX} cy={145} r={8} fill="#22d3ee" opacity="0.15">
-                <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={centerX} cy={145} r={5} fill="white" stroke="#22d3ee" strokeWidth="2" />
-            </g>
-            
-            {/* Condition to plus button - elegant curve */}
-            <path
-              d={`M ${centerX} 285 
-                  C ${centerX} 295, ${centerX} 310, ${centerX} 320`}
-              stroke="#d1d5db"
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-            />
-            
-            {/* Plus button to branches - animated flow line */}
-            <path
-              d={`M ${centerX} 355 L ${centerX} 385`}
-              stroke="url(#flowGradient)"
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
-              filter="url(#glow)"
-            />
-            
-            {/* Smooth curved branches */}
-            {totalBranches > 0 && block.rules.map((_, index) => {
-              const branchX = centerX + (index - (totalBranches - 1) / 2) * branchSpacing;
-              const startY = 385;
-              const midY = 410;
-              const endY = 440;
-              
-              // Calculate control points for smooth S-curve
-              const dx = branchX - centerX;
-              const cpOffset = Math.abs(dx) * 0.5;
-              
-              return (
-                <g key={index}>
-                  {/* Smooth Bézier curve from center to branch */}
-                  <path
-                    d={`M ${centerX} ${startY}
-                        C ${centerX} ${startY + 15},
-                          ${centerX + dx * 0.3} ${midY - 10},
-                          ${centerX + dx * 0.5} ${midY}
-                        S ${branchX} ${endY - 15},
-                          ${branchX} ${endY}`}
-                    stroke="#22d3ee"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                    style={{
-                      transition: 'all 0.3s ease-out',
-                    }}
-                  />
-                  
-                  {/* Animated dot traveling along path */}
-                  <circle r="3" fill="#22d3ee" filter="url(#glow)">
-                    <animateMotion
-                      dur={`${2 + index * 0.3}s`}
-                      repeatCount="indefinite"
-                      path={`M ${centerX} ${startY}
-                             C ${centerX} ${startY + 15},
-                               ${centerX + dx * 0.3} ${midY - 10},
-                               ${centerX + dx * 0.5} ${midY}
-                             S ${branchX} ${endY - 15},
-                               ${branchX} ${endY}`}
-                    />
-                  </circle>
-                  
-                  {/* Vertical line to card */}
-                  <line
-                    x1={branchX} y1={endY}
-                    x2={branchX} y2={endY + 15}
-                    stroke="#22d3ee"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  
-                  {/* End circle with pulse animation */}
-                  <g>
-                    <circle cx={branchX} cy={endY + 80} r={10} fill="#22d3ee" opacity="0.1">
-                      <animate attributeName="r" values="10;14;10" dur="2.5s" repeatCount="indefinite" begin={`${index * 0.5}s`} />
-                      <animate attributeName="opacity" values="0.1;0.05;0.1" dur="2.5s" repeatCount="indefinite" begin={`${index * 0.5}s`} />
-                    </circle>
-                    <circle cx={branchX} cy={endY + 80} r={5} fill="white" stroke="#22d3ee" strokeWidth="2">
-                      <animate attributeName="stroke-width" values="2;3;2" dur="2s" repeatCount="indefinite" begin={`${index * 0.3}s`} />
-                    </circle>
-                  </g>
-                </g>
-              );
-            })}
-            
-            {/* Central connector dot at plus button position */}
-            <g>
-              <circle cx={centerX} cy={385} r={6} fill="#22d3ee" opacity="0.2">
-                <animate attributeName="r" values="6;10;6" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={centerX} cy={385} r={4} fill="#22d3ee" />
-            </g>
-          </svg>
-
-          {/* Nodes */}
-          <div className="relative flex flex-col items-center" style={{ width: treeWidth }}>
-            
-            {/* Main Block Card */}
-            <button
-              onClick={() => setSelectedNode('block')}
-              className={cn(
-                "relative z-10 bg-white rounded-xl shadow-sm border text-left transition-all duration-300 min-w-[280px] max-w-[320px] hover:scale-[1.02]",
-                selectedNode === 'block'
-                  ? "border-cyan-400 ring-2 ring-cyan-200 shadow-lg"
-                  : "border-gray-200 hover:shadow-md hover:border-gray-300"
-              )}
+      {/* Tree Visualization with ReactFlow */}
+      <div className="w-1/2 h-full border-r border-border" style={{ background: '#f8fafb' }}>
+        <ReactFlowProvider>
+          <div style={{ width: '100%', height: '100%' }}>
+            <ReactFlow
+              nodes={treeNodes}
+              edges={treeEdges}
+              nodeTypes={nodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.3 }}
+              minZoom={0.5}
+              maxZoom={1.5}
+              panOnDrag={true}
+              zoomOnScroll={true}
+              proOptions={{ hideAttribution: true }}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable={false}
             >
-              <div className="p-4">
-                <div className="text-sm font-semibold text-gray-900 mb-1">{tasks.length} tareas</div>
-                <div className="text-xs text-gray-500 mb-3">Tareas base del bloque</div>
-                
-                {/* Task list preview */}
-                <div className="space-y-2">
-                  {tasks.slice(0, 2).map((task) => (
-                    <div key={task.id} className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-sm text-gray-800">{task.title}</div>
-                        <div className="text-xs text-gray-400">Asignado: {task.assigneeType}</div>
-                      </div>
-                    </div>
-                  ))}
-                  {tasks.length > 2 && (
-                    <div className="text-xs text-gray-400 pl-4">+{tasks.length - 2} más...</div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Add action button */}
-              <div className="border-t border-gray-100 p-2">
-                <div className="text-xs text-gray-400 text-center hover:text-gray-600 cursor-pointer">
-                  + Nueva tarea
-                </div>
-              </div>
-            </button>
-
-            {/* Condition Card */}
-            <div className="mt-14 relative z-10">
-              <button
-                onClick={() => setSelectedNode('decision')}
-                className={cn(
-                  "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[260px]",
-                  selectedNode === 'decision'
-                    ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
-                    : "border-gray-200 hover:shadow-md hover:border-gray-300"
-                )}
-              >
-                {/* Badge */}
-                <div className="absolute -top-3 left-4">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-medium">
-                    <Users className="w-3 h-3" />
-                    Condición
-                  </span>
-                </div>
-                
-                <div className="p-4 pt-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">Condición</div>
-                      <div className="text-xs text-gray-500">Define rutas según condiciones</div>
-                    </div>
-                    <span className="text-xs text-gray-400">Step 2</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            {/* Plus Button */}
-            <button
-              onClick={() => {
-                handleAddRule();
-                setSelectedNode('decision');
-              }}
-              className="mt-8 relative z-10 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:border-cyan-400 hover:text-cyan-500 transition-all shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-
-            {/* Branch Cards */}
-            {totalBranches > 0 && (
-              <div className="mt-16 flex justify-center relative z-10" style={{ gap: branchSpacing - 180 }}>
-                {block.rules.map((rule) => (
-                  <button
-                    key={rule.id}
-                    onClick={() => setSelectedNode(`rule-${rule.id}`)}
-                    className={cn(
-                      "bg-white rounded-xl shadow-sm border text-left transition-all min-w-[180px] p-3",
-                      selectedNode === `rule-${rule.id}`
-                        ? "border-cyan-400 ring-2 ring-cyan-200 shadow-md"
-                        : "border-gray-200 hover:shadow-md hover:border-gray-300"
-                    )}
-                  >
-                    <div className="text-xs text-gray-600 mb-2">
-                      <span className="capitalize font-medium">{rule.condition.attribute}</span>
-                      <span className="text-gray-400"> es igual a: </span>
-                      <span className="text-cyan-600 font-medium">
-                        {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <Users className="w-3 h-3" />
-                      <span>{rule.action.addedTask ? '1' : '0'}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Branch end circles with plus */}
-            {totalBranches > 0 && (
-              <div className="mt-4 flex justify-center relative z-10" style={{ gap: branchSpacing - 30 }}>
-                {block.rules.map((rule) => (
-                  <div key={rule.id} className="flex flex-col items-center">
-                    <button className="w-6 h-6 rounded-full bg-white border-2 border-cyan-300 flex items-center justify-center text-cyan-500 hover:bg-cyan-50 transition-all shadow-sm">
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Empty state */}
-            {totalBranches === 0 && (
-              <div className="mt-8 text-center text-xs text-gray-400">
-                Haz clic en + para añadir una condición
-              </div>
-            )}
+              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
+            </ReactFlow>
           </div>
-        </div>
+        </ReactFlowProvider>
       </div>
 
       {/* Editor Panel */}
       <div className="w-1/2 p-6 overflow-auto">
-        {selectedNode === 'block' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Configuración del bloque
-            </h3>
-            
+        {/* Block configuration - always visible */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            Configuración del bloque
+          </h3>
+          
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Nombre</label>
+            <input
+              type="text"
+              value={block.name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Nombre</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Período</label>
+              <select
+                value={block.periodId}
+                onChange={(e) => handlePeriodChange(e.target.value)}
+                className="w-full h-9 px-2 rounded-lg border border-border bg-background text-sm"
+              >
+                {journey.periods.map((p) => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">SLA (días)</label>
               <input
-                type="text"
-                value={block.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                type="number"
+                value={block.expectedDurationDays || ''}
+                onChange={(e) => handleSlaChange(parseInt(e.target.value) || 0)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Período</label>
-                <select
-                  value={block.periodId}
-                  onChange={(e) => handlePeriodChange(e.target.value)}
-                  className="w-full h-9 px-2 rounded-lg border border-border bg-background text-sm"
-                >
-                  {journey.periods.map((p) => (
-                    <option key={p.id} value={p.id}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">SLA (días)</label>
-                <input
-                  type="number"
-                  value={block.expectedDurationDays || ''}
-                  onChange={(e) => handleSlaChange(parseInt(e.target.value) || 0)}
-                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border">
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2">Tareas base</h4>
-              {renderTasksEditor()}
-            </div>
-
-            <div className="pt-3 border-t border-border">
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-                <Link2 className="w-3 h-3" /> Dependencias
-              </h4>
-              {renderDependenciesEditor()}
-            </div>
           </div>
-        )}
 
-        {selectedNode === 'decision' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Diamond className="w-4 h-4" />
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2">Tareas base</h4>
+            {renderTasksEditor()}
+          </div>
+
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+              <Link2 className="w-3 h-3" /> Dependencias
+            </h4>
+            {renderDependenciesEditor()}
+          </div>
+
+          {/* Audience Rules Section - always visible in tree view */}
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Diamond className="w-4 h-4 text-cyan-500" />
               Reglas de audiencia
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Define condiciones que añaden tareas adicionales según las características del empleado.
+            </h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              Define condiciones que añaden tareas o bloques según las características del empleado.
             </p>
             {renderAudienceRulesEditor()}
           </div>
-        )}
+        </div>
 
-        {selectedRule && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-accent" />
-                Editar regla
-              </h3>
-              <button
-                onClick={() => {
-                  deleteRule(block.id, selectedRule.id);
-                  setSelectedNode('decision');
-                }}
-                className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Condición</label>
-              <div className="flex gap-2">
-                <select
-                  value={selectedRule.condition.attribute}
-                  onChange={(e) => updateRule(block.id, selectedRule.id, {
-                    ...selectedRule,
-                    condition: { ...selectedRule.condition, attribute: e.target.value }
-                  })}
-                  className="h-9 px-2 rounded border border-border bg-background text-sm"
-                >
-                  <option value="department">Departamento</option>
-                  <option value="location">Ubicación</option>
-                  <option value="role">Rol</option>
-                  <option value="contract_type">Tipo contrato</option>
-                  <option value="seniority">Seniority</option>
-                </select>
-                <span className="flex items-center text-sm text-muted-foreground">=</span>
-                <input
-                  type="text"
-                  value={typeof selectedRule.condition.value === 'string' ? selectedRule.condition.value : ''}
-                  onChange={(e) => updateRule(block.id, selectedRule.id, {
-                    ...selectedRule,
-                    condition: { ...selectedRule.condition, value: e.target.value }
-                  })}
-                  placeholder="Valor..."
-                  className="flex-1 h-9 px-3 rounded border border-border bg-background text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border">
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2">Tareas adicionales para esta audiencia</h4>
-              <div className="space-y-2">
-                {selectedRule.action.addedTask && (
-                  <div className="flex items-center gap-2 p-2 rounded bg-accent/10 border border-accent/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                    <span className="text-sm">{selectedRule.action.addedTask.title}</span>
-                  </div>
-                )}
-                <button className="w-full flex items-center justify-center gap-1.5 p-2 rounded border border-dashed border-accent/50 text-xs text-accent hover:bg-accent/5 transition-colors">
-                  <Plus className="w-3 h-3" />
-                  Añadir tarea condicional
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -745,21 +760,46 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       });
     };
 
+    const blockTemplate = (rule: BlockRule) => rule.action.addedBlockTemplateId 
+      ? blockTemplates.find(t => t.id === rule.action.addedBlockTemplateId)
+      : null;
+
     return (
       <div className="space-y-3">
+        {block.rules.length === 0 && (
+          <div className="text-center py-6 text-sm text-muted-foreground">
+            No hay reglas de audiencia definidas.
+            <br />
+            <span className="text-xs">Las reglas permiten añadir tareas o bloques según las características del empleado.</span>
+          </div>
+        )}
         {block.rules.map((rule) => {
           const ruleTasks = getTasksForRule(rule);
+          const template = blockTemplate(rule);
           
           return (
-            <div key={rule.id} className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+            <div 
+              key={rule.id} 
+              className={cn(
+                "p-3 rounded-lg border space-y-3 cursor-pointer transition-all",
+                selectedNode === `rule-${rule.id}` 
+                  ? "border-cyan-400 bg-cyan-50/50 ring-1 ring-cyan-200" 
+                  : "border-border bg-muted/30 hover:border-cyan-200"
+              )}
+              onClick={() => setSelectedNode(`rule-${rule.id}`)}
+            >
               {/* Condition row */}
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-xs font-semibold text-accent">SI</span>
+                <span className="text-xs font-semibold text-cyan-600">SI</span>
                 <select
                   value={rule.condition.attribute}
-                  onChange={(e) => updateRule(block.id, rule.id, { 
-                    condition: { ...rule.condition, attribute: e.target.value } 
-                  })}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    updateRule(block.id, rule.id, { 
+                      condition: { ...rule.condition, attribute: e.target.value } 
+                    });
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                   className="h-7 px-2 rounded border border-border bg-background text-xs"
                 >
                   <option value="department">Departamento</option>
@@ -774,92 +814,151 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                   onChange={(e) => updateRule(block.id, rule.id, { 
                     condition: { ...rule.condition, value: e.target.value } 
                   })}
+                  onClick={(e) => e.stopPropagation()}
                   placeholder="Valor..."
                   className="flex-1 h-7 px-2 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                 />
                 <button
-                  onClick={() => deleteRule(block.id, rule.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteRule(block.id, rule.id);
+                  }}
                   className="p-1 hover:bg-destructive/10 rounded transition-all"
                 >
                   <Trash2 className="w-3 h-3 text-destructive" />
                 </button>
               </div>
-              
-              {/* Action & Tasks editing */}
-              <div className="pl-4 border-l-2 border-accent/30 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="font-medium text-accent">ENTONCES</span>
-                  <select
-                    value={rule.action.type}
-                    onChange={(e) => {
-                      const newType = e.target.value as any;
-                      updateRule(block.id, rule.id, { 
-                        action: { 
-                          ...rule.action, 
-                          type: newType,
-                          addedTasks: newType === 'add_task' ? (ruleTasks.length > 0 ? ruleTasks : [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }]) : undefined,
-                          addedTask: undefined
-                        } 
-                      });
-                    }}
-                    className="h-7 px-2 rounded border border-border bg-background text-xs"
-                  >
-                    <option value="add_task">Añadir tareas</option>
-                    <option value="skip_block">Saltar bloque</option>
-                    <option value="override_assignee">Cambiar asignado</option>
-                    <option value="change_due_date">Cambiar fecha</option>
-                  </select>
+
+              {/* Visual summary of what this rule adds */}
+              <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-medium text-emerald-700">→</span>
+                  {rule.action.type === 'add_task' ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-medium">
+                        {ruleTasks.length} tarea{ruleTasks.length !== 1 ? 's' : ''}
+                      </span>
+                      {ruleTasks.length > 0 && (
+                        <span className="text-emerald-600 truncate text-xs">
+                          ({ruleTasks.map(t => t.title).join(', ')})
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-medium">Bloque:</span>
+                      <span className="text-emerald-600 truncate">
+                        {template?.name || 'Sin seleccionar'}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
-                {rule.action.type === 'add_task' && (
-                  <div className="space-y-2">
-                    {ruleTasks.map((task, taskIndex) => (
-                      <div key={task.id || taskIndex} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background group">
-                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                        <input
-                          type="text"
-                          value={task.title || ''}
-                          onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { title: e.target.value })}
-                          placeholder="Título de la tarea..."
-                          className="flex-1 bg-transparent text-sm focus:outline-none"
-                        />
-                        <select
-                          value={task.assigneeType || 'employee'}
-                          onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { assigneeType: e.target.value })}
-                          className="h-7 px-2 rounded border border-border bg-background text-xs"
-                        >
-                          <option value="employee">Employee</option>
-                          <option value="manager">Manager</option>
-                          <option value="hr_manager">HR</option>
-                          <option value="it_admin">IT</option>
-                        </select>
-                        <button
-                          onClick={() => handleDeleteTaskFromRule(rule.id, taskIndex)}
-                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 rounded transition-all"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => handleAddTaskToRule(rule.id)}
-                      className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Añadir tarea
-                    </button>
-                  </div>
-                )}
               </div>
+              
+              {/* Expanded editing when selected */}
+              {selectedNode === `rule-${rule.id}` && (
+                <div className="pl-4 border-l-2 border-cyan-300 space-y-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-medium text-cyan-600">ENTONCES</span>
+                    <select
+                      value={rule.action.type}
+                      onChange={(e) => {
+                        const newType = e.target.value as any;
+                        updateRule(block.id, rule.id, { 
+                          action: { 
+                            ...rule.action, 
+                            type: newType,
+                            addedTasks: newType === 'add_task' ? (ruleTasks.length > 0 ? ruleTasks : [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }]) : undefined,
+                            addedTask: undefined
+                          } 
+                        });
+                      }}
+                      className="h-7 px-2 rounded border border-border bg-background text-xs"
+                    >
+                      <option value="add_task">Añadir tareas</option>
+                      <option value="add_block">Añadir bloque</option>
+                    </select>
+                  </div>
+                  
+                  {rule.action.type === 'add_task' && (
+                    <div className="space-y-2">
+                      {ruleTasks.map((task, taskIndex) => (
+                        <div key={task.id || taskIndex} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background group">
+                          <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={task.title || ''}
+                            onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { title: e.target.value })}
+                            placeholder="Título de la tarea..."
+                            className="flex-1 bg-transparent text-sm focus:outline-none"
+                          />
+                          <select
+                            value={task.assigneeType || 'employee'}
+                            onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { assigneeType: e.target.value })}
+                            className="h-7 px-2 rounded border border-border bg-background text-xs"
+                          >
+                            <option value="employee">Employee</option>
+                            <option value="manager">Manager</option>
+                            <option value="hr_manager">HR</option>
+                            <option value="it_admin">IT</option>
+                          </select>
+                          <button
+                            onClick={() => handleDeleteTaskFromRule(rule.id, taskIndex)}
+                            className="p-1 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => handleAddTaskToRule(rule.id)}
+                        className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-emerald-300 text-xs text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Añadir tarea
+                      </button>
+                    </div>
+                  )}
+
+                  {rule.action.type === 'add_block' && (
+                    <div className="space-y-2">
+                      <select
+                        value={rule.action.addedBlockTemplateId || ''}
+                        onChange={(e) => updateRule(block.id, rule.id, { 
+                          action: { 
+                            ...rule.action, 
+                            addedBlockTemplateId: e.target.value 
+                          } 
+                        })}
+                        className="w-full h-8 px-3 rounded border border-border bg-background text-sm"
+                      >
+                        <option value="">Seleccionar bloque...</option>
+                        {blockTemplates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.name} ({template.category})
+                          </option>
+                        ))}
+                      </select>
+                      {rule.action.addedBlockTemplateId && (
+                        <p className="text-xs text-muted-foreground pl-1">
+                          {blockTemplates.find(t => t.id === rule.action.addedBlockTemplateId)?.description}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
         <button
           onClick={handleAddRule}
-          className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+          className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-cyan-300 text-sm text-cyan-600 hover:bg-cyan-50 hover:border-cyan-400 transition-colors font-medium"
         >
-          <Plus className="w-3.5 h-3.5" />
-          Nueva regla
+          <Plus className="w-4 h-4" />
+          Nueva regla de audiencia
         </button>
       </div>
     );
@@ -902,9 +1001,6 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                   Árbol
                 </button>
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
             </div>
           </div>
         </DialogHeader>

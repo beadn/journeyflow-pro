@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Journey, Block, Task, BlockRule } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Eye, User, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users } from 'lucide-react';
+import { Eye, User, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface JourneyPreviewModalProps {
@@ -122,9 +122,6 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                 <p className="text-sm text-muted-foreground">Simula las tareas según condiciones del empleado</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
           </div>
         </DialogHeader>
 
