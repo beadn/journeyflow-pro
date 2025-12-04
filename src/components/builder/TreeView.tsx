@@ -5,6 +5,7 @@ import { ReactFlow, Node, Edge, Controls, Background, useNodesState, useEdgesSta
 import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import { TimeTriggerNode } from './TimeTriggerNode';
+import { LayoutGrid } from 'lucide-react';
 
 interface TreeViewProps {
   journey: Journey;
@@ -149,8 +150,18 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
     }
   }, [updateBlockPosition]);
 
+  const handleAutoLayout = useCallback(() => {
+    // Reset all block positions to force recalculation
+    blocks.forEach(block => {
+      updateBlockPosition(block.id, { x: 0, y: 0 });
+    });
+    // Re-apply initial layout
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [blocks, initialNodes, initialEdges, setNodes, setEdges, updateBlockPosition]);
+
   const handleAddBlock = useCallback(() => {
-    const newBlock = { 
+    const newBlock = {
       id: `block-${Date.now()}`, 
       name: 'New Block', 
       journeyId: journey.id, 
@@ -185,12 +196,21 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-50" />
         <Controls className="!bg-background !border !border-border !rounded-lg !shadow-sm" />
       </ReactFlow>
-      <button 
-        onClick={handleAddBlock} 
-        className="absolute bottom-6 right-6 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm z-10"
-      >
-        + Add Block
-      </button>
+      <div className="absolute bottom-6 right-6 flex gap-2 z-10">
+        <button 
+          onClick={handleAutoLayout} 
+          className="bg-background border border-border text-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:bg-muted transition-all font-medium text-sm"
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Auto-ordenar
+        </button>
+        <button 
+          onClick={handleAddBlock} 
+          className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm"
+        >
+          + Add Block
+        </button>
+      </div>
     </div>
   );
 }
