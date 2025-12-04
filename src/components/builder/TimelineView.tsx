@@ -3,6 +3,7 @@ import { Journey, Block, Period } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { BlockCard } from './BlockCard';
 import { PeriodColumn } from './PeriodColumn';
+import { AddBlockModal } from './AddBlockModal';
 import { cn } from '@/lib/utils';
 import {
   DndContext,
@@ -27,12 +28,15 @@ interface TimelineViewProps {
 export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
   const [layout, setLayout] = useState<'horizontal' | 'vertical'>('horizontal');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [addBlockModal, setAddBlockModal] = useState<{ isOpen: boolean; periodId: string | null }>({
+    isOpen: false,
+    periodId: null,
+  });
   
   const { 
     getBlocksByPeriodId, 
     moveBlockToPeriod, 
     reorderPeriods,
-    addBlock,
     addPeriod,
   } = useJourneyStore();
 
@@ -78,20 +82,12 @@ export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
   };
 
   const handleAddBlock = useCallback((periodId: string) => {
-    const blocks = getBlocksByPeriodId(periodId);
-    const newBlock: Block = {
-      id: `block-${Date.now()}`,
-      name: 'New Block',
-      journeyId: journey.id,
-      periodId,
-      taskIds: [],
-      rules: [],
-      dependencyBlockIds: [],
-      order: blocks.length,
-    };
-    addBlock(newBlock);
-    onBlockEdit(newBlock.id);
-  }, [journey.id, getBlocksByPeriodId, addBlock, onBlockEdit]);
+    setAddBlockModal({ isOpen: true, periodId });
+  }, []);
+
+  const handleBlockCreated = useCallback((blockId: string) => {
+    onBlockEdit(blockId);
+  }, [onBlockEdit]);
 
   const handleAddPeriod = useCallback(() => {
     const newPeriod: Period = {
@@ -191,6 +187,17 @@ export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Add Block Modal */}
+      {addBlockModal.periodId && (
+        <AddBlockModal
+          isOpen={addBlockModal.isOpen}
+          onClose={() => setAddBlockModal({ isOpen: false, periodId: null })}
+          journeyId={journey.id}
+          periodId={addBlockModal.periodId}
+          onBlockCreated={handleBlockCreated}
+        />
+      )}
     </div>
   );
 }
