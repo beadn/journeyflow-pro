@@ -34,6 +34,17 @@ type MainTab = 'builder' | 'monitor';
 type BuilderView = 'timeline' | 'tree';
 type MonitorView = 'overview' | 'employee' | 'journey' | 'block';
 
+const formatAnchorEvent = (anchor: string) => {
+  const labels: Record<string, string> = {
+    'start_date': 'Employee Start Date',
+    'last_day': 'Last Working Day',
+    'promotion_date': 'Promotion Date',
+    'cycle_start': 'Cycle Start',
+    'custom': 'Custom Event',
+  };
+  return labels[anchor] || anchor;
+};
+
 export default function JourneyPage() {
   const { journeyId } = useParams();
   const navigate = useNavigate();
@@ -103,7 +114,11 @@ export default function JourneyPage() {
             
             <div>
               <h1 className="text-lg font-semibold text-foreground">{journey.name}</h1>
-              <p className="text-xs text-muted-foreground capitalize">{journey.type.replace('_', ' ')}</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="capitalize">{journey.type.replace('_', ' ')}</span>
+                <span className="text-border">•</span>
+                <span>Anchor: <span className="font-medium text-foreground">{formatAnchorEvent(journey.anchorEvent)}</span></span>
+              </p>
             </div>
 
             <span className={cn(
