@@ -69,6 +69,16 @@
     --journey-performance: 280 68% 60%;
     --journey-custom: 220 9% 46%;
 
+    /* Block categories */
+    --category-legal: 142 76% 42%;
+    --category-it: 217 91% 60%;
+    --category-hr: 280 68% 60%;
+    --category-welcome: 38 92% 50%;
+    --category-team: 340 75% 55%;
+    --category-feedback: 25 95% 53%;
+    --category-training: 190 90% 45%;
+    --category-default: 220 13% 60%;
+
     /* Canvas */
     --canvas-bg: 220 14% 96%;
     --canvas-dot: 220 13% 85%;
