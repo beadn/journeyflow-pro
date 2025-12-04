@@ -48,7 +48,7 @@ export const BlockNode = memo(({ data }: { data: { block: Block; onEdit: () => v
 
   return (
     <>
-      <Handle type="target" position={Position.Left} className="!w-4 !h-4 !bg-accent !border-2 !border-card !-left-2" />
+      <Handle type="target" position={Position.Top} className="!w-4 !h-4 !bg-accent !border-2 !border-card !-top-2" />
       
       <div className={cn(
         "min-w-[260px] max-w-[320px] rounded-xl border-2 shadow-factorial-lg transition-all hover:shadow-factorial-xl",
@@ -206,7 +206,7 @@ export const BlockNode = memo(({ data }: { data: { block: Block; onEdit: () => v
         )}
       </div>
 
-      <Handle type="source" position={Position.Right} className="!w-4 !h-4 !bg-accent !border-2 !border-card !-right-2" />
+      <Handle type="source" position={Position.Bottom} className="!w-4 !h-4 !bg-accent !border-2 !border-card !-bottom-2" />
     </>
   );
 });
