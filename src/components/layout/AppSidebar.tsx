@@ -3,38 +3,25 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   Users, 
-  GitBranch, 
-  Activity, 
-  ChevronDown, 
   ChevronRight,
   Menu,
   X
 } from 'lucide-react';
 
-interface NavItem {
-  label: string;
-  path: string;
-  icon: React.ReactNode;
-}
-
-const navItems: NavItem[] = [
-  { label: 'Builder', path: '/builder', icon: <GitBranch className="w-5 h-5" /> },
-  { label: 'Monitor', path: '/monitor', icon: <Activity className="w-5 h-5" /> },
-];
-
 export function AppSidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = location.pathname.startsWith('/workflows') || 
+                   location.pathname.startsWith('/builder') || 
+                   location.pathname.startsWith('/monitor');
 
   return (
     <>
       {/* Mobile toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-lg shadow-factorial border border-border"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-lg shadow-sm border border-border"
       >
         {isExpanded ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -61,64 +48,20 @@ export function AppSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1">
-          {/* Main section */}
-          <div>
-            <button
-              onClick={() => setIsLifecycleOpen(!isLifecycleOpen)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
-                isExpanded ? "justify-between" : "justify-center"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5" />
-                {isExpanded && <span className="text-sm font-medium">EmployeeLifeCycle</span>}
-              </div>
-              {isExpanded && (
-                isLifecycleOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-              )}
-            </button>
-
-            {isLifecycleOpen && isExpanded && (
-              <div className="mt-1 ml-4 space-y-1 animate-fade-in">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                      isActive(item.path)
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                    )}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
-              </div>
+          <NavLink
+            to="/workflows"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+              isExpanded ? "justify-start" : "justify-center",
+              isActive
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}
-
-            {!isExpanded && (
-              <div className="mt-2 space-y-1">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "flex items-center justify-center p-2.5 rounded-lg transition-colors",
-                      isActive(item.path)
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                    )}
-                    title={item.label}
-                  >
-                    {item.icon}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
+            title="Employee Lifecycle"
+          >
+            <Users className="w-5 h-5" />
+            {isExpanded && <span className="text-sm font-medium">Employee Lifecycle</span>}
+          </NavLink>
         </nav>
 
         {/* Collapse button */}
