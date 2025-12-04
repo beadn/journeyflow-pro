@@ -94,6 +94,7 @@ export interface RuleAction {
   newAssigneeType?: string;
   newDueOffsetDays?: number;
   addedTask?: Partial<Task>;
+  addedTasks?: Partial<Task>[];
 }
 
 // Employee and Progress Tracking

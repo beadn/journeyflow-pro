@@ -681,108 +681,189 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
     </div>
   );
 
-  const renderAudienceRulesEditor = () => (
-    <div className="space-y-3">
-      {block.rules.map((rule) => (
-        <div key={rule.id} className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
-          {/* Condition row */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-xs font-semibold text-accent">SI</span>
-            <select
-              value={rule.condition.attribute}
-              onChange={(e) => updateRule(block.id, rule.id, { 
-                condition: { ...rule.condition, attribute: e.target.value } 
-              })}
-              className="h-7 px-2 rounded border border-border bg-background text-xs"
-            >
-              <option value="department">Departamento</option>
-              <option value="location">Ubicación</option>
-              <option value="role">Rol</option>
-              <option value="manager">Manager</option>
-            </select>
-            <span className="text-muted-foreground">=</span>
-            <input
-              type="text"
-              value={typeof rule.condition.value === 'string' ? rule.condition.value : ''}
-              onChange={(e) => updateRule(block.id, rule.id, { 
-                condition: { ...rule.condition, value: e.target.value } 
-              })}
-              placeholder="Valor..."
-              className="flex-1 h-7 px-2 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            <button
-              onClick={() => deleteRule(block.id, rule.id)}
-              className="p-1 hover:bg-destructive/10 rounded transition-all"
-            >
-              <Trash2 className="w-3 h-3 text-destructive" />
-            </button>
-          </div>
+  const renderAudienceRulesEditor = () => {
+    const getTasksForRule = (rule: BlockRule) => {
+      // Support both old addedTask and new addedTasks format
+      if (rule.action.addedTasks && rule.action.addedTasks.length > 0) {
+        return rule.action.addedTasks;
+      }
+      if (rule.action.addedTask) {
+        return [rule.action.addedTask];
+      }
+      return [];
+    };
+
+    const handleAddTaskToRule = (ruleId: string) => {
+      const rule = block.rules.find(r => r.id === ruleId);
+      if (!rule) return;
+      
+      const currentTasks = getTasksForRule(rule);
+      const newTask = { 
+        id: `rule-task-${Date.now()}`,
+        title: 'Nueva tarea', 
+        type: 'basic' as const, 
+        assigneeType: 'employee' 
+      };
+      
+      updateRule(block.id, ruleId, { 
+        action: { 
+          ...rule.action, 
+          addedTasks: [...currentTasks, newTask],
+          addedTask: undefined // Clear old format
+        } 
+      });
+    };
+
+    const handleUpdateTaskInRule = (ruleId: string, taskIndex: number, updates: Partial<Task>) => {
+      const rule = block.rules.find(r => r.id === ruleId);
+      if (!rule) return;
+      
+      const currentTasks = [...getTasksForRule(rule)];
+      currentTasks[taskIndex] = { ...currentTasks[taskIndex], ...updates };
+      
+      updateRule(block.id, ruleId, { 
+        action: { 
+          ...rule.action, 
+          addedTasks: currentTasks,
+          addedTask: undefined
+        } 
+      });
+    };
+
+    const handleDeleteTaskFromRule = (ruleId: string, taskIndex: number) => {
+      const rule = block.rules.find(r => r.id === ruleId);
+      if (!rule) return;
+      
+      const currentTasks = getTasksForRule(rule).filter((_, i) => i !== taskIndex);
+      
+      updateRule(block.id, ruleId, { 
+        action: { 
+          ...rule.action, 
+          addedTasks: currentTasks,
+          addedTask: undefined
+        } 
+      });
+    };
+
+    return (
+      <div className="space-y-3">
+        {block.rules.map((rule) => {
+          const ruleTasks = getTasksForRule(rule);
           
-          {/* Action & Task editing */}
-          <div className="pl-4 border-l-2 border-accent/30 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-accent">ENTONCES</span>
-              <select
-                value={rule.action.type}
-                onChange={(e) => updateRule(block.id, rule.id, { 
-                  action: { 
-                    ...rule.action, 
-                    type: e.target.value as any,
-                    addedTask: e.target.value === 'add_task' ? (rule.action.addedTask || { title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }) : undefined
-                  } 
-                })}
-                className="h-7 px-2 rounded border border-border bg-background text-xs"
-              >
-                <option value="add_task">Añadir tarea</option>
-                <option value="skip_block">Saltar bloque</option>
-                <option value="override_assignee">Cambiar asignado</option>
-                <option value="change_due_date">Cambiar fecha</option>
-              </select>
-            </div>
-            
-            {rule.action.type === 'add_task' && (
-              <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background">
-                <input
-                  type="text"
-                  value={rule.action.addedTask?.title || ''}
-                  onChange={(e) => updateRule(block.id, rule.id, { 
-                    action: { 
-                      ...rule.action, 
-                      addedTask: { ...rule.action.addedTask, title: e.target.value } 
-                    } 
-                  })}
-                  placeholder="Título de la tarea..."
-                  className="flex-1 bg-transparent text-sm focus:outline-none"
-                />
+          return (
+            <div key={rule.id} className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+              {/* Condition row */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-xs font-semibold text-accent">SI</span>
                 <select
-                  value={rule.action.addedTask?.assigneeType || 'employee'}
+                  value={rule.condition.attribute}
                   onChange={(e) => updateRule(block.id, rule.id, { 
-                    action: { 
-                      ...rule.action, 
-                      addedTask: { ...rule.action.addedTask, assigneeType: e.target.value } 
-                    } 
+                    condition: { ...rule.condition, attribute: e.target.value } 
                   })}
                   className="h-7 px-2 rounded border border-border bg-background text-xs"
                 >
-                  <option value="employee">Employee</option>
+                  <option value="department">Departamento</option>
+                  <option value="location">Ubicación</option>
+                  <option value="role">Rol</option>
                   <option value="manager">Manager</option>
-                  <option value="hr_manager">HR</option>
-                  <option value="it_admin">IT</option>
                 </select>
+                <span className="text-muted-foreground">=</span>
+                <input
+                  type="text"
+                  value={typeof rule.condition.value === 'string' ? rule.condition.value : ''}
+                  onChange={(e) => updateRule(block.id, rule.id, { 
+                    condition: { ...rule.condition, value: e.target.value } 
+                  })}
+                  placeholder="Valor..."
+                  className="flex-1 h-7 px-2 rounded border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <button
+                  onClick={() => deleteRule(block.id, rule.id)}
+                  className="p-1 hover:bg-destructive/10 rounded transition-all"
+                >
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </button>
               </div>
-            )}
-          </div>
-        </div>
-      ))}
-      <button
-        onClick={handleAddRule}
-        className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-accent hover:text-accent transition-colors"
-      >
-        <Plus className="w-3.5 h-3.5" />
-        Nueva regla
-      </button>
-    </div>
-  );
+              
+              {/* Action & Tasks editing */}
+              <div className="pl-4 border-l-2 border-accent/30 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-accent">ENTONCES</span>
+                  <select
+                    value={rule.action.type}
+                    onChange={(e) => {
+                      const newType = e.target.value as any;
+                      updateRule(block.id, rule.id, { 
+                        action: { 
+                          ...rule.action, 
+                          type: newType,
+                          addedTasks: newType === 'add_task' ? (ruleTasks.length > 0 ? ruleTasks : [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }]) : undefined,
+                          addedTask: undefined
+                        } 
+                      });
+                    }}
+                    className="h-7 px-2 rounded border border-border bg-background text-xs"
+                  >
+                    <option value="add_task">Añadir tareas</option>
+                    <option value="skip_block">Saltar bloque</option>
+                    <option value="override_assignee">Cambiar asignado</option>
+                    <option value="change_due_date">Cambiar fecha</option>
+                  </select>
+                </div>
+                
+                {rule.action.type === 'add_task' && (
+                  <div className="space-y-2">
+                    {ruleTasks.map((task, taskIndex) => (
+                      <div key={task.id || taskIndex} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background group">
+                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                        <input
+                          type="text"
+                          value={task.title || ''}
+                          onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { title: e.target.value })}
+                          placeholder="Título de la tarea..."
+                          className="flex-1 bg-transparent text-sm focus:outline-none"
+                        />
+                        <select
+                          value={task.assigneeType || 'employee'}
+                          onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { assigneeType: e.target.value })}
+                          className="h-7 px-2 rounded border border-border bg-background text-xs"
+                        >
+                          <option value="employee">Employee</option>
+                          <option value="manager">Manager</option>
+                          <option value="hr_manager">HR</option>
+                          <option value="it_admin">IT</option>
+                        </select>
+                        <button
+                          onClick={() => handleDeleteTaskFromRule(rule.id, taskIndex)}
+                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 rounded transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => handleAddTaskToRule(rule.id)}
+                      className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Añadir tarea
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <button
+          onClick={handleAddRule}
+          className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Nueva regla
+        </button>
+      </div>
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
