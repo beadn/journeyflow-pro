@@ -4,6 +4,7 @@ import { useJourneyStore } from '@/stores/journeyStore';
 import { TimelineView } from '@/components/builder/TimelineView';
 import { TreeView } from '@/components/builder/TreeView';
 import { BlockEditorModal } from '@/components/builder/BlockEditorModal';
+import { JourneyPreviewModal } from '@/components/builder/JourneyPreviewModal';
 import { MonitorByEmployee } from '@/components/monitor/MonitorByEmployee';
 import { MonitorByJourney } from '@/components/monitor/MonitorByJourney';
 import { MonitorByBlock } from '@/components/monitor/MonitorByBlock';
@@ -20,6 +21,7 @@ import {
   Users,
   BarChart3,
   Pencil,
+  Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -52,6 +54,7 @@ export default function JourneyPage() {
   const [builderView, setBuilderView] = useState<BuilderView>('timeline');
   const [monitorView, setMonitorView] = useState<MonitorView>('overview');
   const [isBlockEditorOpen, setIsBlockEditorOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const { 
     journeys,
@@ -192,31 +195,41 @@ export default function JourneyPage() {
         {/* Sub-navigation based on main tab */}
         <div className="px-6 pb-3">
           {mainTab === 'builder' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-2">View:</span>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground mr-2">View:</span>
+                <button
+                  onClick={() => setBuilderView('timeline')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                    builderView === 'timeline' 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setBuilderView('tree')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                    builderView === 'tree' 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <GitBranch className="w-3.5 h-3.5" />
+                  Tree
+                </button>
+              </div>
+              
               <button
-                onClick={() => setBuilderView('timeline')}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                  builderView === 'timeline' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                )}
+                onClick={() => setIsPreviewOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                Timeline
-              </button>
-              <button
-                onClick={() => setBuilderView('tree')}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                  builderView === 'tree' 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <GitBranch className="w-3.5 h-3.5" />
-                Tree
+                <Eye className="w-3.5 h-3.5" />
+                Preview
               </button>
             </div>
           )}
@@ -271,6 +284,13 @@ export default function JourneyPage() {
           setSelectedBlockId(null);
         }}
         blockId={selectedBlockId}
+      />
+
+      {/* Journey Preview Modal */}
+      <JourneyPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        journey={journey}
       />
     </div>
   );
