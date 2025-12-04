@@ -33,8 +33,13 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         target: block.id,
         type: 'smoothstep',
         animated: true,
-        style: { stroke: 'hsl(var(--muted-foreground))', strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--muted-foreground))' },
+        style: { stroke: 'hsl(var(--accent))', strokeWidth: 3 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--accent))', width: 20, height: 20 },
+        label: 'depends on',
+        labelStyle: { fontSize: 10, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' },
+        labelBgStyle: { fill: 'hsl(var(--card))', fillOpacity: 0.9 },
+        labelBgPadding: [6, 4] as [number, number],
+        labelBgBorderRadius: 4,
       }))
     ), [blocks]
   );
