@@ -3,7 +3,7 @@ import { Handle, Position } from '@xyflow/react';
 import { Block } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { cn } from '@/lib/utils';
-import { Plus, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2 } from 'lucide-react';
+import { Plus, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2, GitBranch } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,61 +27,21 @@ interface BlockNodeProps {
 const getCategoryConfig = (category?: string) => {
   switch (category?.toLowerCase()) {
     case 'legal':
-      return { 
-        badge: 'bg-[hsl(var(--category-legal)/0.15)] text-[hsl(var(--category-legal))]',
-        border: 'border-[hsl(var(--category-legal)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-legal)/0.05)]',
-        icon: Scale 
-      };
+      return { color: '#16a34a', bgLight: '#dcfce7', icon: Scale };
     case 'it':
-      return { 
-        badge: 'bg-[hsl(var(--category-it)/0.15)] text-[hsl(var(--category-it))]',
-        border: 'border-[hsl(var(--category-it)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-it)/0.05)]',
-        icon: Monitor 
-      };
+      return { color: '#2563eb', bgLight: '#dbeafe', icon: Monitor };
     case 'hr':
-      return { 
-        badge: 'bg-[hsl(var(--category-hr)/0.15)] text-[hsl(var(--category-hr))]',
-        border: 'border-[hsl(var(--category-hr)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-hr)/0.05)]',
-        icon: Users 
-      };
+      return { color: '#9333ea', bgLight: '#f3e8ff', icon: Users };
     case 'welcome':
-      return { 
-        badge: 'bg-[hsl(var(--category-welcome)/0.15)] text-[hsl(var(--category-welcome))]',
-        border: 'border-[hsl(var(--category-welcome)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-welcome)/0.05)]',
-        icon: Smile 
-      };
+      return { color: '#f59e0b', bgLight: '#fef3c7', icon: Smile };
     case 'team':
-      return { 
-        badge: 'bg-[hsl(var(--category-team)/0.15)] text-[hsl(var(--category-team))]',
-        border: 'border-[hsl(var(--category-team)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-team)/0.05)]',
-        icon: UsersRound 
-      };
+      return { color: '#06b6d4', bgLight: '#cffafe', icon: UsersRound };
     case 'feedback':
-      return { 
-        badge: 'bg-[hsl(var(--category-feedback)/0.15)] text-[hsl(var(--category-feedback))]',
-        border: 'border-[hsl(var(--category-feedback)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-feedback)/0.05)]',
-        icon: MessageSquare 
-      };
+      return { color: '#ec4899', bgLight: '#fce7f3', icon: MessageSquare };
     case 'training':
-      return { 
-        badge: 'bg-[hsl(var(--category-training)/0.15)] text-[hsl(var(--category-training))]',
-        border: 'border-[hsl(var(--category-training)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-training)/0.05)]',
-        icon: GraduationCap 
-      };
+      return { color: '#8b5cf6', bgLight: '#ede9fe', icon: GraduationCap };
     default:
-      return { 
-        badge: 'bg-[hsl(var(--category-default)/0.15)] text-[hsl(var(--category-default))]',
-        border: 'border-[hsl(var(--category-default)/0.3)]',
-        headerBg: 'bg-[hsl(var(--category-default)/0.05)]',
-        icon: Layers 
-      };
+      return { color: '#6b7280', bgLight: '#f3f4f6', icon: Layers };
   }
 };
 
@@ -100,32 +60,53 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
 
   return (
     <>
-      {/* Top handle */}
+      {/* Top handle with animated ring */}
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="!w-3 !h-3 !bg-card !border-2 !border-border !rounded-full !-top-1.5" 
+        className="!w-4 !h-4 !bg-white !border-2 !border-cyan-300 !rounded-full !-top-2" 
       />
       
       <div 
         className={cn(
-          "relative bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[280px] max-w-[320px] group",
-          categoryConfig.border
+          "relative bg-white rounded-xl border-2 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer min-w-[280px] max-w-[320px] group",
+          isHovered ? "border-cyan-400 scale-[1.02]" : "border-gray-200"
         )}
         onClick={onEdit}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Colored header strip */}
-        <div className={cn("h-1.5 rounded-t-xl", categoryConfig.headerBg.replace('/0.05]', '/0.4]'))} />
-        
+        {/* Category badge */}
+        <div className="absolute -top-3 left-4 z-10">
+          <span 
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm border"
+            style={{ 
+              backgroundColor: categoryConfig.bgLight, 
+              color: categoryConfig.color,
+              borderColor: `${categoryConfig.color}30`
+            }}
+          >
+            <CategoryIcon className="w-3.5 h-3.5" />
+            {block.category || 'Block'}
+          </span>
+        </div>
+
+        {/* Step number */}
+        {stepNumber && (
+          <div className="absolute -top-3 right-4 z-10">
+            <span className="text-xs text-gray-400 font-medium bg-white px-2 py-0.5 rounded-full border border-gray-200">
+              Step {stepNumber}
+            </span>
+          </div>
+        )}
+
         {/* Delete button */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
               className={cn(
-                "absolute top-3 right-3 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all z-10",
+                "absolute top-3 right-3 p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all z-10",
                 isHovered ? "opacity-100" : "opacity-0"
               )}
             >
@@ -134,93 +115,65 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Block</AlertDialogTitle>
+              <AlertDialogTitle>Eliminar bloque</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{block.name}"? This will also delete all {tasks.length} tasks in this block. This action cannot be undone.
+                ¿Seguro que quieres eliminar "{block.name}"? Se eliminarán también las {tasks.length} tareas de este bloque.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Delete
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-red-500 text-white hover:bg-red-600">
+                Eliminar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Type badge */}
-        <div className="absolute -top-3 left-4">
-          <span className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-            categoryConfig.badge
-          )}>
-            <CategoryIcon className="w-3.5 h-3.5" />
-            {block.category || 'Block'}
-          </span>
-        </div>
-
-        {/* Step number badge */}
-        {stepNumber && (
-          <div className="absolute -top-3 right-4">
-            <span className="text-xs text-muted-foreground font-medium">
-              Step {stepNumber}
-            </span>
-          </div>
-        )}
-
         {/* Content */}
-        <div className="pt-5 px-4 pb-4">
-          <h3 className="text-sm font-semibold text-foreground mb-1 leading-snug pr-6">
+        <div className="pt-6 px-4 pb-4">
+          <h3 className="text-sm font-bold text-gray-900 mb-1 leading-snug pr-6">
             {block.name}
           </h3>
           
-          {block.description ? (
-            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-              {block.description}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground/70 mb-3">
-              Click to configure this block
-            </p>
-          )}
+          <p className="text-xs text-gray-500 mb-3">
+            {block.description || 'Haz clic para configurar'}
+          </p>
 
           {/* Tasks preview */}
           {tasks.length > 0 && (
             <div className="space-y-2 mb-3">
               {tasks.slice(0, 2).map((task) => (
                 <div key={task.id} className="flex items-start gap-2">
-                  <div className="w-2 h-2 rounded-full bg-accent mt-1.5 flex-shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground/80 truncate">
+                    <p className="text-xs font-medium text-gray-700 truncate">
                       {task.title}
-                      {task.simpleCondition && <span className="text-destructive ml-0.5">*</span>}
                     </p>
-                    {task.assigneeLabel && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Assignee: <span className="text-foreground/70">{task.assigneeLabel}</span>
-                      </p>
-                    )}
+                    <p className="text-[10px] text-gray-400">
+                      {task.assigneeType}
+                    </p>
                   </div>
                 </div>
               ))}
               {tasks.length > 2 && (
-                <p className="text-[10px] text-muted-foreground pl-4">
-                  +{tasks.length - 2} more tasks
+                <p className="text-[10px] text-gray-400 pl-4">
+                  +{tasks.length - 2} tareas más
                 </p>
               )}
             </div>
           )}
 
           {/* Footer stats */}
-          <div className="flex items-center gap-3 pt-2 border-t border-border text-xs text-muted-foreground">
-            {tasks.length > 0 && (
-              <span className="font-medium">{tasks.length} tasks</span>
-            )}
+          <div className="flex items-center gap-3 pt-3 border-t border-gray-100 text-xs">
+            <span className="font-semibold text-gray-600">{tasks.length} tareas</span>
             {block.rules.length > 0 && (
-              <span className="text-[hsl(var(--category-legal))] font-medium">{block.rules.length} rules</span>
+              <span className="flex items-center gap-1 text-cyan-600 font-medium">
+                <GitBranch className="w-3 h-3" />
+                {block.rules.length} reglas
+              </span>
             )}
             {block.expectedDurationDays && (
-              <span>{block.expectedDurationDays}d SLA</span>
+              <span className="text-gray-400">{block.expectedDurationDays}d SLA</span>
             )}
           </div>
         </div>
@@ -230,13 +183,13 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="!w-3 !h-3 !bg-card !border-2 !border-border !rounded-full !-bottom-1.5" 
+        className="!w-4 !h-4 !bg-white !border-2 !border-cyan-300 !rounded-full !-bottom-2" 
       />
 
-      {/* Add button */}
-      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-        <button className="w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shadow-sm">
-          <Plus className="w-3.5 h-3.5" />
+      {/* Add button below */}
+      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+        <button className="w-7 h-7 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:border-cyan-400 transition-all shadow-sm hover:shadow-md">
+          <Plus className="w-4 h-4" />
         </button>
       </div>
     </>
