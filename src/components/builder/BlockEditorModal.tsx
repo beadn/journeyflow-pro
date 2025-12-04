@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Block, Task, BlockRule, Period } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Plus, Trash2, GripVertical, ChevronDown } from 'lucide-react';
+import { X, Plus, Trash2, GripVertical, List, GitBranch, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlockEditorModalProps {
@@ -31,6 +31,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   const otherBlocks = blocks.filter((b) => b.id !== blockId && b.journeyId === block?.journeyId);
 
   const [activeTab, setActiveTab] = useState<'tasks' | 'rules' | 'deps' | 'notifications'>('tasks');
+  const [blockViewMode, setBlockViewMode] = useState<'inline' | 'tree'>('inline');
 
   if (!block || !journey) return null;
 
@@ -160,6 +161,99 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
               />
             </div>
           </div>
+
+          {/* View Mode Toggle */}
+          <div className="px-6 py-3 border-b border-border flex items-center justify-between bg-muted/30">
+            <span className="text-sm font-medium text-muted-foreground">Vista del bloque</span>
+            <div className="flex items-center gap-1 p-1 bg-background rounded-lg border border-border">
+              <button
+                onClick={() => setBlockViewMode('inline')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all",
+                  blockViewMode === 'inline'
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="w-3.5 h-3.5" />
+                Lista
+              </button>
+              <button
+                onClick={() => setBlockViewMode('tree')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all",
+                  blockViewMode === 'tree'
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                Árbol
+              </button>
+            </div>
+          </div>
+
+          {/* Tree View */}
+          {blockViewMode === 'tree' && (
+            <div className="p-6 border-b border-border">
+              <div className="relative">
+                {/* Main Block Node */}
+                <div className="flex flex-col items-center">
+                  <div className="px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-md min-w-[200px] text-center">
+                    {block.name}
+                    <div className="text-xs opacity-80 mt-1">{tasks.length} tareas base</div>
+                  </div>
+                  
+                  {/* Connection Line */}
+                  {block.rules.length > 0 && (
+                    <div className="w-0.5 h-6 bg-border" />
+                  )}
+                  
+                  {/* Audience Rules Branches */}
+                  {block.rules.length > 0 && (
+                    <div className="flex gap-4 mt-0">
+                      {/* All employees branch */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-0.5 h-4 bg-border" />
+                        <div className="px-3 py-2 rounded-lg border-2 border-border bg-background text-xs min-w-[140px]">
+                          <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <Users className="w-3 h-3" />
+                            <span className="font-medium">Todos</span>
+                          </div>
+                          <div className="text-foreground">{tasks.length} tareas</div>
+                        </div>
+                      </div>
+                      
+                      {/* Conditional branches */}
+                      {block.rules.map((rule, index) => (
+                        <div key={rule.id} className="flex flex-col items-center">
+                          <div className="w-0.5 h-4 bg-accent" />
+                          <div className="px-3 py-2 rounded-lg border-2 border-accent bg-accent/5 text-xs min-w-[140px]">
+                            <div className="flex items-center gap-1.5 text-accent mb-1">
+                              <GitBranch className="w-3 h-3" />
+                              <span className="font-medium capitalize">{rule.condition.attribute}</span>
+                            </div>
+                            <div className="text-muted-foreground text-[10px] mb-1">
+                              = {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
+                            </div>
+                            <div className="text-foreground">
+                              +{rule.action.addedTask ? '1 tarea' : '0 tareas'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {block.rules.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Añade reglas de audiencia para ver las ramificaciones
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="border-b border-border">
