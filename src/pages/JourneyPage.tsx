@@ -245,13 +245,15 @@ export default function JourneyPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         {mainTab === 'builder' && (
           <>
             {builderView === 'timeline' ? (
               <TimelineView journey={journey} onBlockEdit={handleBlockEdit} />
             ) : (
-              <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
+              <div className="absolute inset-0">
+                <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
+              </div>
             )}
           </>
         )}
