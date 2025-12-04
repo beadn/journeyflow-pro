@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { Journey } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
-import { ReactFlow, Node, Edge, Controls, Background, useNodesState, useEdgesState, ConnectionMode, MarkerType, BackgroundVariant } from '@xyflow/react';
+import { ReactFlow, Node, Edge, Controls, Background, MiniMap, useNodesState, useEdgesState, ConnectionMode, MarkerType, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import { TimeTriggerNode } from './TimeTriggerNode';
+import { ConditionBranchNode } from './ConditionBranchNode';
 
 interface TreeViewProps {
   journey: Journey;
@@ -14,13 +15,12 @@ interface TreeViewProps {
 const nodeTypes: any = { 
   blockNode: BlockNode,
   timeTrigger: TimeTriggerNode,
+  conditionBranch: ConditionBranchNode,
 };
 
-const NODE_WIDTH = 300;
-const NODE_HEIGHT = 200;
-const HORIZONTAL_GAP = 80;
-const VERTICAL_GAP = 120;
-const TRIGGER_HEIGHT = 60;
+const NODE_WIDTH = 320;
+const NODE_GAP_X = 100;
+const NODE_GAP_Y = 150;
 
 export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition, addBlock, getBlockMetrics } = useJourneyStore();
@@ -35,120 +35,176 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   // Calculate node positions - vertical layout with periods as rows
   const initialNodes: Node[] = useMemo(() => {
     const nodes: Node[] = [];
-    let currentY = 0;
+    let currentY = 50;
 
     sortedPeriods.forEach((period, periodIndex) => {
       const periodBlocks = getBlocksByPeriodId(period.id);
       
-      // Add time trigger node at the start of each period (except first)
-      if (periodIndex > 0) {
-        const prevPeriod = sortedPeriods[periodIndex - 1];
-        const daysDiff = period.offsetDays - prevPeriod.offsetDays;
-        
+      // Add time trigger node at the start of each period
+      const triggerId = periodIndex === 0 ? 'trigger-start' : `trigger-${period.id}`;
+      const prevPeriod = periodIndex > 0 ? sortedPeriods[periodIndex - 1] : null;
+      const daysDiff = prevPeriod ? period.offsetDays - prevPeriod.offsetDays : 0;
+      
+      nodes.push({
+        id: triggerId,
+        type: 'timeTrigger',
+        position: { x: 0, y: currentY },
+        data: { 
+          label: period.label,
+          daysDiff,
+          offsetDays: period.offsetDays,
+          isStart: periodIndex === 0,
+        },
+        draggable: false,
+      });
+      
+      currentY += 80;
+
+      // Calculate positions for blocks in this period
+      const totalWidth = periodBlocks.length * NODE_WIDTH + (periodBlocks.length - 1) * NODE_GAP_X;
+      const startX = -totalWidth / 2 + NODE_WIDTH / 2;
+
+      // Check if any block has rules (conditions) - show condition branch
+      const blocksWithRules = periodBlocks.filter(b => b.rules.length > 0);
+      
+      if (blocksWithRules.length > 0 && periodBlocks.length > 1) {
+        // Add condition branch node
+        const conditionBlock = blocksWithRules[0];
         nodes.push({
-          id: `trigger-${period.id}`,
-          type: 'timeTrigger',
+          id: `condition-${period.id}`,
+          type: 'conditionBranch',
           position: { x: 0, y: currentY },
           data: { 
-            label: period.label,
-            daysDiff,
-            offsetDays: period.offsetDays,
+            label: 'Condition',
+            description: 'Define different paths based on conditions',
           },
           draggable: false,
         });
-        currentY += TRIGGER_HEIGHT + 40;
-      } else {
-        // First period - add start trigger
-        nodes.push({
-          id: `trigger-start`,
-          type: 'timeTrigger',
-          position: { x: 0, y: currentY },
-          data: { 
-            label: period.label,
-            daysDiff: 0,
-            offsetDays: period.offsetDays,
-            isStart: true,
-          },
-          draggable: false,
-        });
-        currentY += TRIGGER_HEIGHT + 40;
+        currentY += 120;
       }
 
-      // Calculate total width needed for this period's blocks
-      const totalBlocksWidth = periodBlocks.length * NODE_WIDTH + (periodBlocks.length - 1) * HORIZONTAL_GAP;
-      const startX = -totalBlocksWidth / 2;
-
-      // Add block nodes for this period - all at the same Y level
+      // Add block nodes for this period
       periodBlocks.forEach((block, blockIndex) => {
-        const x = startX + blockIndex * (NODE_WIDTH + HORIZONTAL_GAP);
+        const x = startX + blockIndex * (NODE_WIDTH + NODE_GAP_X);
+        const savedPosition = block.position;
         
         nodes.push({
           id: block.id,
           type: 'blockNode',
-          position: block.position || { x, y: currentY },
+          position: savedPosition && savedPosition.x !== 0 ? savedPosition : { x, y: currentY },
           data: { 
             block, 
             onEdit: () => onBlockEdit(block.id), 
-            metrics: getBlockMetrics(block.id) 
+            metrics: getBlockMetrics(block.id),
+            stepNumber: blockIndex + 1,
           },
         });
       });
 
-      // Move Y for next period
       if (periodBlocks.length > 0) {
-        currentY += NODE_HEIGHT + VERTICAL_GAP;
+        currentY += NODE_GAP_Y + 100;
       }
     });
 
     return nodes;
   }, [sortedPeriods, getBlocksByPeriodId, onBlockEdit, getBlockMetrics]);
 
-  // Create edges for dependencies and time triggers
+  // Create edges
   const initialEdges: Edge[] = useMemo(() => {
     const edges: Edge[] = [];
+    let prevTriggerId: string | null = null;
 
-    // Add edges from time triggers to blocks in that period
     sortedPeriods.forEach((period, periodIndex) => {
       const periodBlocks = getBlocksByPeriodId(period.id);
       const triggerId = periodIndex === 0 ? 'trigger-start' : `trigger-${period.id}`;
+      const hasCondition = periodBlocks.some(b => b.rules.length > 0) && periodBlocks.length > 1;
+      const conditionId = `condition-${period.id}`;
 
-      // Connect trigger to all blocks in this period that have no dependencies in same period
-      periodBlocks.forEach((block) => {
-        const hasDependencyInSamePeriod = block.dependencyBlockIds.some(depId => {
-          const depBlock = blocks.find(b => b.id === depId);
-          return depBlock?.periodId === period.id;
+      // Connect previous trigger to current trigger
+      if (prevTriggerId && periodIndex > 0) {
+        edges.push({
+          id: `${prevTriggerId}-${triggerId}`,
+          source: prevTriggerId,
+          target: triggerId,
+          type: 'smoothstep',
+          style: { stroke: '#94a3b8', strokeWidth: 2 },
+        });
+      }
+
+      if (hasCondition) {
+        // Connect trigger to condition
+        edges.push({
+          id: `${triggerId}-${conditionId}`,
+          source: triggerId,
+          target: conditionId,
+          type: 'smoothstep',
+          style: { stroke: '#94a3b8', strokeWidth: 2 },
         });
 
-        if (!hasDependencyInSamePeriod) {
+        // Connect condition to blocks (as branches)
+        periodBlocks.forEach((block, idx) => {
+          const rule = block.rules[0];
+          const branchLabel = rule 
+            ? `${rule.condition.attribute} = ${Array.isArray(rule.condition.value) ? rule.condition.value[0] : rule.condition.value}`
+            : undefined;
+
           edges.push({
-            id: `${triggerId}-${block.id}`,
-            source: triggerId,
+            id: `${conditionId}-${block.id}`,
+            source: conditionId,
             target: block.id,
             type: 'smoothstep',
-            animated: false,
-            style: { stroke: 'hsl(var(--muted-foreground))', strokeWidth: 2, strokeDasharray: '5,5' },
+            sourceHandle: idx === 0 ? 'left' : idx === periodBlocks.length - 1 ? 'right' : 'bottom',
+            style: { stroke: '#14b8a6', strokeWidth: 2 },
+            label: branchLabel,
+            labelStyle: { fontSize: 11, fontWeight: 500, fill: '#64748b' },
+            labelBgStyle: { fill: '#ffffff', fillOpacity: 1 },
+            labelBgPadding: [8, 4] as [number, number],
+            labelBgBorderRadius: 6,
           });
-        }
-      });
+        });
+      } else {
+        // Connect trigger directly to blocks
+        periodBlocks.forEach((block) => {
+          const hasDependencyFromOtherPeriod = block.dependencyBlockIds.some(depId => {
+            const depBlock = blocks.find(b => b.id === depId);
+            return depBlock && depBlock.periodId !== period.id;
+          });
+
+          if (!hasDependencyFromOtherPeriod) {
+            edges.push({
+              id: `${triggerId}-${block.id}`,
+              source: triggerId,
+              target: block.id,
+              type: 'smoothstep',
+              style: { stroke: '#94a3b8', strokeWidth: 2 },
+            });
+          }
+        });
+      }
+
+      // Set previous trigger
+      if (periodBlocks.length > 0) {
+        prevTriggerId = periodBlocks[periodBlocks.length - 1].id;
+      } else {
+        prevTriggerId = triggerId;
+      }
     });
 
     // Add dependency edges between blocks
     blocks.forEach((block) => {
       block.dependencyBlockIds.forEach((depId) => {
-        edges.push({
-          id: `dep-${depId}-${block.id}`,
-          source: depId,
-          target: block.id,
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: 'hsl(var(--accent))', strokeWidth: 3 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--accent))', width: 20, height: 20 },
-          label: 'requires',
-          labelStyle: { fontSize: 10, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' },
-          labelBgStyle: { fill: 'hsl(var(--card))', fillOpacity: 0.9 },
-          labelBgPadding: [6, 4] as [number, number],
-          labelBgBorderRadius: 4,
-        });
+        const depBlock = blocks.find(b => b.id === depId);
+        if (depBlock && depBlock.periodId !== block.periodId) {
+          edges.push({
+            id: `dep-${depId}-${block.id}`,
+            source: depId,
+            target: block.id,
+            type: 'smoothstep',
+            animated: true,
+            style: { stroke: '#8b5cf6', strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6', width: 16, height: 16 },
+          });
+        }
       });
     });
 
@@ -183,7 +239,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   }, [journey, blocks, addBlock, onBlockEdit]);
 
   return (
-    <div className="w-full h-full" style={{ height: 'calc(100vh - 4rem)' }}>
+    <div className="w-full h-full relative" style={{ height: 'calc(100vh - 4rem)' }}>
       <ReactFlow 
         nodes={nodes} 
         edges={edges} 
@@ -193,16 +249,26 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         nodeTypes={nodeTypes} 
         connectionMode={ConnectionMode.Loose} 
         fitView 
-        fitViewOptions={{ padding: 0.3 }} 
-        className="bg-canvas-bg"
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-        }}
+        fitViewOptions={{ padding: 0.4 }} 
+        className="bg-[#f8fafc]"
+        defaultEdgeOptions={{ type: 'smoothstep' }}
+        minZoom={0.3}
+        maxZoom={1.5}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--canvas-dot))" />
-        <Controls className="!bg-card !border-border !shadow-factorial" />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#e2e8f0" />
+        <Controls className="!bg-white !border !border-gray-200 !rounded-lg !shadow-sm" />
+        <MiniMap 
+          nodeColor={() => '#e2e8f0'}
+          maskColor="rgba(255,255,255,0.8)"
+          className="!bg-white !border !border-gray-200 !rounded-lg"
+        />
       </ReactFlow>
-      <button onClick={handleAddBlock} className="absolute bottom-6 right-6 btn-primary flex items-center gap-2 shadow-factorial-lg z-10">+ Add Block</button>
+      <button 
+        onClick={handleAddBlock} 
+        className="absolute bottom-6 right-6 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md hover:border-gray-300 transition-all font-medium text-sm z-10"
+      >
+        + Add Block
+      </button>
     </div>
   );
 }
