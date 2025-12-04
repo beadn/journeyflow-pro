@@ -53,12 +53,12 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   }, [journey, blocks, addBlock, onBlockEdit]);
 
   return (
-    <div className="h-full relative">
+    <div className="w-full h-full" style={{ height: 'calc(100vh - 4rem)' }}>
       <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onNodeDragStop={onNodeDragStop} nodeTypes={nodeTypes} connectionMode={ConnectionMode.Loose} fitView fitViewOptions={{ padding: 0.2 }} className="bg-canvas-bg">
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--canvas-dot))" />
         <Controls className="!bg-card !border-border !shadow-factorial" />
       </ReactFlow>
-      <button onClick={handleAddBlock} className="absolute bottom-6 right-6 btn-primary flex items-center gap-2 shadow-factorial-lg">+ Add Block</button>
+      <button onClick={handleAddBlock} className="absolute bottom-6 right-6 btn-primary flex items-center gap-2 shadow-factorial-lg z-10">+ Add Block</button>
     </div>
   );
 }
