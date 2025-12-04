@@ -173,7 +173,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
 
   // TREE VIEW - Clean style like reference
   const totalBranches = block.rules.length;
-  const branchSpacing = 200;
+  const branchSpacing = 180;
   const treeWidth = Math.max(500, (totalBranches + 1) * branchSpacing);
   const centerX = treeWidth / 2;
   
@@ -181,68 +181,156 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
     <div className="flex h-[550px]">
       {/* Tree Visualization */}
       <div className="w-1/2 border-r border-border overflow-auto" style={{ background: '#f8fafb' }}>
-        <div className="relative p-8 pb-16" style={{ minWidth: treeWidth, minHeight: 500 }}>
+        <div className="relative p-8 pb-16" style={{ minWidth: treeWidth, minHeight: 520 }}>
           
-          {/* SVG Connectors */}
+          {/* SVG Connectors with smooth Bézier curves */}
           <svg 
             className="absolute inset-0 pointer-events-none" 
             style={{ width: '100%', height: '100%', minWidth: treeWidth }}
           >
-            {/* Main block to condition connector */}
-            <line
-              x1={centerX} y1={145}
-              x2={centerX} y2={200}
-              stroke="#e5e7eb"
+            <defs>
+              {/* Animated gradient for active paths */}
+              <linearGradient id="flowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3">
+                  <animate attributeName="stopOpacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="1">
+                  <animate attributeName="offset" values="0.3;0.5;0.7;0.5;0.3" dur="3s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3">
+                  <animate attributeName="stopOpacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
+                </stop>
+              </linearGradient>
+              
+              {/* Glow filter */}
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              
+              {/* Pulse animation for circles */}
+              <radialGradient id="pulseGradient">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            
+            {/* Main block to condition - smooth vertical with curve hint */}
+            <path
+              d={`M ${centerX} 145 
+                  C ${centerX} 160, ${centerX} 185, ${centerX} 200`}
+              stroke="#d1d5db"
               strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
             />
-            {/* Circle connector after main block */}
-            <circle cx={centerX} cy={145} r={6} fill="white" stroke="#e5e7eb" strokeWidth="2" />
             
-            {/* Condition to plus button connector */}
-            <line
-              x1={centerX} y1={285}
-              x2={centerX} y2={320}
-              stroke="#e5e7eb"
+            {/* Animated circle connector after main block */}
+            <g>
+              <circle cx={centerX} cy={145} r={8} fill="#22d3ee" opacity="0.15">
+                <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={centerX} cy={145} r={5} fill="white" stroke="#22d3ee" strokeWidth="2" />
+            </g>
+            
+            {/* Condition to plus button - elegant curve */}
+            <path
+              d={`M ${centerX} 285 
+                  C ${centerX} 295, ${centerX} 310, ${centerX} 320`}
+              stroke="#d1d5db"
               strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
             />
             
-            {/* Plus button to branches vertical line */}
-            <line
-              x1={centerX} y1={355}
-              x2={centerX} y2={390}
-              stroke="#22d3ee"
-              strokeWidth="2"
+            {/* Plus button to branches - animated flow line */}
+            <path
+              d={`M ${centerX} 355 L ${centerX} 385`}
+              stroke="url(#flowGradient)"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+              filter="url(#glow)"
             />
             
-            {/* Horizontal line connecting branches */}
-            {totalBranches > 0 && (
-              <line
-                x1={centerX - (totalBranches * branchSpacing) / 2}
-                y1={390}
-                x2={centerX + (totalBranches * branchSpacing) / 2}
-                stroke="#22d3ee"
-                strokeWidth="2"
-              />
-            )}
-            
-            {/* Curved connectors to each branch */}
-            {block.rules.map((_, index) => {
+            {/* Smooth curved branches */}
+            {totalBranches > 0 && block.rules.map((_, index) => {
               const branchX = centerX + (index - (totalBranches - 1) / 2) * branchSpacing;
+              const startY = 385;
+              const midY = 410;
+              const endY = 440;
+              
+              // Calculate control points for smooth S-curve
+              const dx = branchX - centerX;
+              const cpOffset = Math.abs(dx) * 0.5;
+              
               return (
                 <g key={index}>
-                  {/* Vertical drop to branch */}
+                  {/* Smooth Bézier curve from center to branch */}
                   <path
-                    d={`M ${branchX} 390 
-                        Q ${branchX} 410, ${branchX} 430`}
+                    d={`M ${centerX} ${startY}
+                        C ${centerX} ${startY + 15},
+                          ${centerX + dx * 0.3} ${midY - 10},
+                          ${centerX + dx * 0.5} ${midY}
+                        S ${branchX} ${endY - 15},
+                          ${branchX} ${endY}`}
                     stroke="#22d3ee"
                     strokeWidth="2"
                     fill="none"
+                    strokeLinecap="round"
+                    style={{
+                      transition: 'all 0.3s ease-out',
+                    }}
                   />
-                  {/* Circle at branch end */}
-                  <circle cx={branchX} cy={490} r={5} fill="white" stroke="#22d3ee" strokeWidth="2" />
+                  
+                  {/* Animated dot traveling along path */}
+                  <circle r="3" fill="#22d3ee" filter="url(#glow)">
+                    <animateMotion
+                      dur={`${2 + index * 0.3}s`}
+                      repeatCount="indefinite"
+                      path={`M ${centerX} ${startY}
+                             C ${centerX} ${startY + 15},
+                               ${centerX + dx * 0.3} ${midY - 10},
+                               ${centerX + dx * 0.5} ${midY}
+                             S ${branchX} ${endY - 15},
+                               ${branchX} ${endY}`}
+                    />
+                  </circle>
+                  
+                  {/* Vertical line to card */}
+                  <line
+                    x1={branchX} y1={endY}
+                    x2={branchX} y2={endY + 15}
+                    stroke="#22d3ee"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* End circle with pulse animation */}
+                  <g>
+                    <circle cx={branchX} cy={endY + 80} r={10} fill="#22d3ee" opacity="0.1">
+                      <animate attributeName="r" values="10;14;10" dur="2.5s" repeatCount="indefinite" begin={`${index * 0.5}s`} />
+                      <animate attributeName="opacity" values="0.1;0.05;0.1" dur="2.5s" repeatCount="indefinite" begin={`${index * 0.5}s`} />
+                    </circle>
+                    <circle cx={branchX} cy={endY + 80} r={5} fill="white" stroke="#22d3ee" strokeWidth="2">
+                      <animate attributeName="stroke-width" values="2;3;2" dur="2s" repeatCount="indefinite" begin={`${index * 0.3}s`} />
+                    </circle>
+                  </g>
                 </g>
               );
             })}
+            
+            {/* Central connector dot at plus button position */}
+            <g>
+              <circle cx={centerX} cy={385} r={6} fill="#22d3ee" opacity="0.2">
+                <animate attributeName="r" values="6;10;6" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={centerX} cy={385} r={4} fill="#22d3ee" />
+            </g>
           </svg>
 
           {/* Nodes */}
@@ -252,9 +340,9 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
             <button
               onClick={() => setSelectedNode('block')}
               className={cn(
-                "relative z-10 bg-white rounded-xl shadow-sm border text-left transition-all min-w-[280px] max-w-[320px]",
+                "relative z-10 bg-white rounded-xl shadow-sm border text-left transition-all duration-300 min-w-[280px] max-w-[320px] hover:scale-[1.02]",
                 selectedNode === 'block'
-                  ? "border-primary ring-2 ring-primary/20 shadow-md"
+                  ? "border-cyan-400 ring-2 ring-cyan-200 shadow-lg"
                   : "border-gray-200 hover:shadow-md hover:border-gray-300"
               )}
             >
