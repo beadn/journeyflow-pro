@@ -1,7 +1,18 @@
 import { Block } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { cn } from '@/lib/utils';
-import { Clock, ListTodo, GitBranch, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers } from 'lucide-react';
+import { Clock, ListTodo, GitBranch, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface BlockCardProps {
   block: Block;
@@ -71,22 +82,53 @@ const getCategoryConfig = (category?: string) => {
 };
 
 export function BlockCard({ block, onEdit, isDragging }: BlockCardProps) {
-  const { getTasksByBlockId } = useJourneyStore();
+  const { getTasksByBlockId, deleteBlock } = useJourneyStore();
   const tasks = getTasksByBlockId(block.id);
   const categoryConfig = getCategoryConfig(block.category);
   const CategoryIcon = categoryConfig.icon;
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteBlock(block.id);
+  };
 
   return (
     <div
       onClick={onEdit}
       className={cn(
-        "block-card border-l-4",
+        "block-card border-l-4 group relative",
         categoryConfig.borderColor,
         isDragging && "opacity-50 rotate-2"
       )}
     >
+      {/* Delete button */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-2 right-2 p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Block</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{block.name}"? This will also delete all {tasks.length} tasks in this block. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-3 pr-6">
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-foreground text-sm leading-tight">{block.name}</h4>
           {block.category && (

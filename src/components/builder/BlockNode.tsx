@@ -1,9 +1,20 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Block } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { cn } from '@/lib/utils';
-import { Plus, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers } from 'lucide-react';
+import { Plus, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface BlockNodeProps {
   data: { 
@@ -76,10 +87,16 @@ const getCategoryConfig = (category?: string) => {
 
 export const BlockNode = memo(({ data }: BlockNodeProps) => {
   const { block, onEdit, stepNumber } = data;
-  const { getTasksByBlockId } = useJourneyStore();
+  const { getTasksByBlockId, deleteBlock } = useJourneyStore();
   const tasks = getTasksByBlockId(block.id);
   const categoryConfig = getCategoryConfig(block.category);
   const CategoryIcon = categoryConfig.icon;
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteBlock(block.id);
+  };
 
   return (
     <>
@@ -92,14 +109,45 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
       
       <div 
         className={cn(
-          "relative bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[280px] max-w-[320px]",
+          "relative bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[280px] max-w-[320px] group",
           categoryConfig.border
         )}
         onClick={onEdit}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Colored header strip */}
         <div className={cn("h-1.5 rounded-t-xl", categoryConfig.headerBg.replace('/0.05]', '/0.4]'))} />
         
+        {/* Delete button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "absolute top-3 right-3 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all z-10",
+                isHovered ? "opacity-100" : "opacity-0"
+              )}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Block</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{block.name}"? This will also delete all {tasks.length} tasks in this block. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Type badge */}
         <div className="absolute -top-3 left-4">
           <span className={cn(
@@ -122,7 +170,7 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
 
         {/* Content */}
         <div className="pt-5 px-4 pb-4">
-          <h3 className="text-sm font-semibold text-foreground mb-1 leading-snug">
+          <h3 className="text-sm font-semibold text-foreground mb-1 leading-snug pr-6">
             {block.name}
           </h3>
           
