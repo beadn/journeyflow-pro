@@ -6,7 +6,7 @@ import '@xyflow/react/dist/style.css';
 import { BlockNode } from './BlockNode';
 import { TimeTriggerNode } from './TimeTriggerNode';
 import { AddBlockModal } from './AddBlockModal';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Plus } from 'lucide-react';
 
 interface TreeViewProps {
   journey: Journey;
@@ -18,11 +18,23 @@ const nodeTypes: any = {
   timeTrigger: TimeTriggerNode,
 };
 
-const NODE_WIDTH = 280;
-const NODE_HEIGHT = 120;
-const HORIZONTAL_GAP = 60;
-const VERTICAL_GAP = 100;
-const TRIGGER_HEIGHT = 50;
+const NODE_WIDTH = 300;
+const NODE_HEIGHT = 160;
+const HORIZONTAL_GAP = 80;
+const VERTICAL_GAP = 140;
+const TRIGGER_HEIGHT = 80;
+
+// Custom edge style matching the mini-tree
+const cyanEdgeStyle = {
+  stroke: '#22d3ee',
+  strokeWidth: 2,
+};
+
+const grayEdgeStyle = {
+  stroke: '#d1d5db',
+  strokeWidth: 2,
+  strokeDasharray: '6,6',
+};
 
 export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
   const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition } = useJourneyStore();
@@ -63,18 +75,19 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         draggable: false,
       });
 
-      // Connect to previous trigger
+      // Connect to previous trigger with dashed gray line
       if (prevTriggerId) {
         edges.push({
           id: `edge-${prevTriggerId}-${triggerId}`,
           source: prevTriggerId,
           target: triggerId,
           type: 'smoothstep',
-          style: { stroke: 'hsl(var(--muted-foreground))', strokeWidth: 2, strokeDasharray: '5,5' },
+          style: grayEdgeStyle,
+          animated: false,
         });
       }
 
-      currentY += TRIGGER_HEIGHT + 40;
+      currentY += TRIGGER_HEIGHT + 60;
 
       // Position blocks horizontally centered under their trigger
       if (periodBlocks.length > 0) {
@@ -96,14 +109,19 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
             draggable: true,
           });
 
-          // Connect trigger to each block
+          // Connect trigger to each block with cyan line
           edges.push({
             id: `edge-${triggerId}-${block.id}`,
             source: triggerId,
             target: block.id,
             type: 'smoothstep',
-            style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))', width: 12, height: 12 },
+            style: cyanEdgeStyle,
+            markerEnd: { 
+              type: MarkerType.ArrowClosed, 
+              color: '#22d3ee', 
+              width: 14, 
+              height: 14 
+            },
           });
         });
 
@@ -123,13 +141,18 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           target: block.id,
           type: 'smoothstep',
           animated: true,
-          style: { stroke: 'hsl(var(--destructive))', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--destructive))', width: 12, height: 12 },
-          label: 'depends on',
-          labelStyle: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' },
-          labelBgStyle: { fill: 'hsl(var(--background))' },
-          labelBgPadding: [4, 2] as [number, number],
-          labelBgBorderRadius: 4,
+          style: { stroke: '#f97316', strokeWidth: 2 },
+          markerEnd: { 
+            type: MarkerType.ArrowClosed, 
+            color: '#f97316', 
+            width: 12, 
+            height: 12 
+          },
+          label: 'depende de',
+          labelStyle: { fontSize: 10, fill: '#9ca3af', fontWeight: 500 },
+          labelBgStyle: { fill: 'white', fillOpacity: 0.9 },
+          labelBgPadding: [6, 4] as [number, number],
+          labelBgBorderRadius: 6,
         });
       });
     });
@@ -167,7 +190,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
 
   return (
     <ReactFlowProvider>
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', position: 'relative', background: '#f8fafb' }}>
         <ReactFlow 
           nodes={nodes} 
           edges={edges} 
@@ -176,31 +199,60 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           onNodeDragStop={onNodeDragStop} 
           nodeTypes={nodeTypes}
           fitView 
-          fitViewOptions={{ padding: 0.3 }} 
+          fitViewOptions={{ padding: 0.4 }} 
           style={{ width: '100%', height: '100%' }}
-          className="bg-muted/30"
-          defaultEdgeOptions={{ type: 'smoothstep' }}
-          minZoom={0.4}
+          defaultEdgeOptions={{ 
+            type: 'smoothstep',
+            style: cyanEdgeStyle,
+          }}
+          minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-50" />
-          <Controls className="!bg-background !border !border-border !rounded-lg !shadow-sm" />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={24} 
+            size={1} 
+            color="#e5e7eb"
+          />
+          <Controls className="!bg-white !border-2 !border-gray-200 !rounded-xl !shadow-lg" />
         </ReactFlow>
-        <div style={{ position: 'absolute', bottom: 24, right: 24, display: 'flex', gap: 8, zIndex: 10 }}>
+        
+        {/* Action buttons */}
+        <div className="absolute bottom-6 right-6 flex gap-3 z-10">
           <button 
             onClick={handleAutoLayout} 
-            className="bg-background border border-border text-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-sm hover:bg-muted transition-all font-medium text-sm"
+            className="bg-white border-2 border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-md hover:shadow-lg hover:border-gray-300 transition-all font-medium text-sm"
           >
             <LayoutGrid className="w-4 h-4" />
             Auto-ordenar
           </button>
           <button 
             onClick={() => setAddBlockModal(true)} 
-            className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:bg-primary/90 transition-all font-medium text-sm"
+            className="bg-cyan-500 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:bg-cyan-600 hover:shadow-xl transition-all font-semibold text-sm"
           >
-            + Add Block
+            <Plus className="w-4 h-4" />
+            Añadir bloque
           </button>
+        </div>
+
+        {/* Legend */}
+        <div className="absolute bottom-6 left-6 bg-white border-2 border-gray-200 rounded-xl shadow-md p-3 z-10">
+          <div className="text-xs font-semibold text-gray-600 mb-2">Leyenda</div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-0.5 bg-cyan-400 rounded"></div>
+              <span className="text-xs text-gray-500">Flujo principal</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-0.5 bg-gray-300 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #d1d5db, #d1d5db 4px, transparent 4px, transparent 8px)' }}></div>
+              <span className="text-xs text-gray-500">Conexión temporal</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-0.5 bg-orange-400 rounded"></div>
+              <span className="text-xs text-gray-500">Dependencia</span>
+            </div>
+          </div>
         </div>
       </div>
 
