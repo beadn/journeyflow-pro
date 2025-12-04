@@ -24,14 +24,14 @@ const HORIZONTAL_GAP = 80;
 const VERTICAL_GAP = 140;
 const TRIGGER_HEIGHT = 80;
 
-// Custom edge style matching the mini-tree
+// Custom edge style
 const cyanEdgeStyle = {
-  stroke: '#22d3ee',
+  stroke: 'hsl(var(--primary))',
   strokeWidth: 2,
 };
 
 const grayEdgeStyle = {
-  stroke: '#d1d5db',
+  stroke: 'hsl(var(--border))',
   strokeWidth: 2,
   strokeDasharray: '6,6',
 };
@@ -190,7 +190,14 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
 
   return (
     <ReactFlowProvider>
-      <div style={{ width: '100%', height: '100%', position: 'relative', background: '#f8fafb' }}>
+      <div 
+        style={{ 
+          width: '100%', 
+          height: 'calc(100vh - 180px)', 
+          position: 'relative',
+          background: 'hsl(var(--muted) / 0.3)'
+        }}
+      >
         <ReactFlow 
           nodes={nodes} 
           edges={edges} 
@@ -213,23 +220,23 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
             variant={BackgroundVariant.Dots} 
             gap={24} 
             size={1} 
-            color="#e5e7eb"
+            color="hsl(var(--border))"
           />
-          <Controls className="!bg-white !border-2 !border-gray-200 !rounded-xl !shadow-lg" />
+          <Controls className="!bg-card !border !border-border !rounded-lg !shadow-sm" />
         </ReactFlow>
         
         {/* Action buttons */}
         <div className="absolute bottom-6 right-6 flex gap-3 z-10">
           <button 
             onClick={handleAutoLayout} 
-            className="bg-white border-2 border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-md hover:shadow-lg hover:border-gray-300 transition-all font-medium text-sm"
+            className="bg-card border border-border text-foreground px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:shadow-lg hover:bg-muted transition-all font-medium text-sm"
           >
             <LayoutGrid className="w-4 h-4" />
             Auto-ordenar
           </button>
           <button 
             onClick={() => setAddBlockModal(true)} 
-            className="bg-cyan-500 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:bg-cyan-600 hover:shadow-xl transition-all font-semibold text-sm"
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-all font-semibold text-sm"
           >
             <Plus className="w-4 h-4" />
             Añadir bloque
@@ -237,20 +244,20 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-6 left-6 bg-white border-2 border-gray-200 rounded-xl shadow-md p-3 z-10">
-          <div className="text-xs font-semibold text-gray-600 mb-2">Leyenda</div>
+        <div className="absolute bottom-6 left-6 bg-card border border-border rounded-lg shadow-md p-3 z-10">
+          <div className="text-xs font-semibold text-foreground mb-2">Leyenda</div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-cyan-400 rounded"></div>
-              <span className="text-xs text-gray-500">Flujo principal</span>
+              <div className="w-6 h-0.5 bg-primary rounded"></div>
+              <span className="text-xs text-muted-foreground">Flujo principal</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-gray-300 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #d1d5db, #d1d5db 4px, transparent 4px, transparent 8px)' }}></div>
-              <span className="text-xs text-gray-500">Conexión temporal</span>
+              <div className="w-6 h-0.5 bg-border rounded"></div>
+              <span className="text-xs text-muted-foreground">Conexión temporal</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-orange-400 rounded"></div>
-              <span className="text-xs text-gray-500">Dependencia</span>
+              <div className="w-6 h-0.5 bg-orange-500 rounded"></div>
+              <span className="text-xs text-muted-foreground">Dependencia</span>
             </div>
           </div>
         </div>
