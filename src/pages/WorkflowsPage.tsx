@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useJourneyStore } from '@/stores/journeyStore';
-import { Plus, GitBranch, Activity, Users, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Plus, Users, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
 import { CreateJourneyModal } from '@/components/builder/CreateJourneyModal';
 
 export default function WorkflowsPage() {
@@ -10,7 +10,7 @@ export default function WorkflowsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleJourneyCreated = (journeyId: string) => {
-    navigate(`/builder/${journeyId}`);
+    navigate(`/journey/${journeyId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -117,18 +117,10 @@ export default function WorkflowsPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/builder/${journey.id}`)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-background border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors"
+                    onClick={() => navigate(`/journey/${journey.id}`)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
                   >
-                    <GitBranch className="w-4 h-4" />
-                    Builder
-                  </button>
-                  <button
-                    onClick={() => navigate(`/monitor/${journey.id}`)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    <Activity className="w-4 h-4" />
-                    Monitor
+                    Open
                   </button>
                 </div>
               </div>
