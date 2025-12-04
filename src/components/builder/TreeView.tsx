@@ -24,7 +24,7 @@ const VERTICAL_GAP = 100;
 const TRIGGER_HEIGHT = 50;
 
 export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
-  const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition, addBlock, getBlockMetrics } = useJourneyStore();
+  const { getBlocksByJourneyId, getBlocksByPeriodId, updateBlockPosition, addBlock } = useJourneyStore();
   const blocks = getBlocksByJourneyId(journey.id);
   
   const sortedPeriods = useMemo(() => 
@@ -89,7 +89,6 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
             data: { 
               block, 
               onEdit: () => onBlockEdit(block.id), 
-              metrics: getBlockMetrics(block.id),
               stepNumber: blockIndex + 1,
             },
             draggable: true,
@@ -134,7 +133,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
     });
 
     return { nodes, edges };
-  }, [sortedPeriods, blocks, getBlocksByPeriodId, onBlockEdit, getBlockMetrics]);
+  }, [sortedPeriods, blocks, getBlocksByPeriodId, onBlockEdit]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
