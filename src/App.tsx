@@ -17,16 +17,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
+        <AppLayout>
+          <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/builder" element={<BuilderPage />} />
             <Route path="/builder/:journeyId" element={<BuilderPage />} />
             <Route path="/monitor" element={<MonitorPage />} />
             <Route path="/monitor/:view" element={<MonitorPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
