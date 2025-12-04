@@ -172,98 +172,160 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   );
 
   // TREE VIEW
+  const totalBranches = 1 + block.rules.length; // "Todos" + rules
+  const branchWidth = 120;
+  const treeWidth = Math.max(400, totalBranches * branchWidth + 60);
+  const centerX = treeWidth / 2;
+  
   const renderTreeView = () => (
     <div className="flex h-[500px]">
       {/* Tree Visualization */}
-      <div className="w-1/2 p-6 border-r border-border bg-muted/20 overflow-auto">
-        <div className="flex flex-col items-center min-h-full">
-          {/* Main Block Node */}
-          <button
-            onClick={() => setSelectedNode('block')}
-            className={cn(
-              "px-5 py-3 rounded-lg text-sm font-medium shadow-sm min-w-[180px] text-center transition-all border-2",
-              selectedNode === 'block'
-                ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
-                : "bg-background border-border hover:border-primary/50"
-            )}
+      <div className="w-1/2 border-r border-border bg-gradient-to-b from-muted/10 to-muted/30 overflow-auto">
+        <div className="relative p-6" style={{ minWidth: treeWidth, minHeight: 400 }}>
+          {/* SVG Connectors */}
+          <svg 
+            className="absolute inset-0 pointer-events-none" 
+            style={{ width: treeWidth, height: 400 }}
           >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Settings className="w-4 h-4" />
-              {block.name}
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--border))" />
+                <stop offset="100%" stopColor="hsl(var(--muted-foreground) / 0.3)" />
+              </linearGradient>
+              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--accent))" />
+                <stop offset="100%" stopColor="hsl(var(--accent) / 0.5)" />
+              </linearGradient>
+            </defs>
+            
+            {/* Main block to decision connector */}
+            <path
+              d={`M ${centerX} 52 L ${centerX} 80`}
+              stroke="url(#lineGradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+            
+            {/* Decision to branches connectors */}
+            {Array.from({ length: totalBranches }).map((_, index) => {
+              const branchX = centerX + (index - (totalBranches - 1) / 2) * branchWidth;
+              const startY = 140;
+              const endY = 200;
+              const controlOffset = 30;
+              
+              return (
+                <path
+                  key={index}
+                  d={`M ${centerX} ${startY} 
+                      C ${centerX} ${startY + controlOffset}, 
+                        ${branchX} ${endY - controlOffset}, 
+                        ${branchX} ${endY}`}
+                  stroke={index === 0 ? "url(#lineGradient)" : "url(#accentGradient)"}
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  className="transition-all duration-300"
+                  style={{ opacity: 0.8 }}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Nodes */}
+          <div className="relative flex flex-col items-center" style={{ width: treeWidth }}>
+            {/* Main Block Node */}
+            <button
+              onClick={() => setSelectedNode('block')}
+              className={cn(
+                "relative z-10 px-5 py-3 rounded-xl text-sm font-medium shadow-lg min-w-[180px] text-center transition-all border-2 backdrop-blur-sm",
+                selectedNode === 'block'
+                  ? "bg-primary text-primary-foreground border-primary ring-4 ring-primary/20 scale-105"
+                  : "bg-background/95 border-border hover:border-primary/50 hover:shadow-xl"
+              )}
+            >
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Settings className="w-4 h-4" />
+                <span className="truncate max-w-[140px]">{block.name}</span>
+              </div>
+              <div className="text-xs opacity-70">{tasks.length} tareas • {block.dependencyBlockIds.length} deps</div>
+            </button>
+
+            {/* Decision Node (Diamond) */}
+            <div className="mt-8 relative z-10">
+              <button
+                onClick={() => setSelectedNode('decision')}
+                className={cn(
+                  "w-16 h-16 rotate-45 flex items-center justify-center transition-all border-2 shadow-lg backdrop-blur-sm",
+                  selectedNode === 'decision'
+                    ? "bg-accent border-accent ring-4 ring-accent/20 scale-110"
+                    : "bg-background/95 border-border hover:border-accent/50 hover:shadow-xl"
+                )}
+              >
+                <span className={cn(
+                  "-rotate-45 text-sm font-bold",
+                  selectedNode === 'decision' ? "text-accent-foreground" : "text-muted-foreground"
+                )}>
+                  ?
+                </span>
+              </button>
             </div>
-            <div className="text-xs opacity-70">{tasks.length} tareas • {block.dependencyBlockIds.length} deps</div>
-          </button>
 
-          {/* Connector Line */}
-          <div className="w-0.5 h-8 bg-border" />
-
-          {/* Decision Node (Diamond) */}
-          <button
-            onClick={() => setSelectedNode('decision')}
-            className={cn(
-              "w-14 h-14 rotate-45 flex items-center justify-center transition-all border-2 shadow-sm",
-              selectedNode === 'decision'
-                ? "bg-accent border-accent ring-2 ring-accent/30"
-                : "bg-background border-border hover:border-accent/50"
-            )}
-          >
-            <span className={cn(
-              "-rotate-45 text-xs font-bold",
-              selectedNode === 'decision' ? "text-accent-foreground" : "text-muted-foreground"
-            )}>
-              ?
-            </span>
-          </button>
-
-          {/* Connector Lines to Branches */}
-          <div className="flex items-start mt-2">
-            {/* Left connector */}
-            <div className="flex flex-col items-center">
-              <div className="w-0.5 h-4 bg-border" />
-            </div>
-            {/* Horizontal line with branches */}
-            <div className="flex items-start gap-0 relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-border" style={{ width: `${Math.max(1, block.rules.length) * 120 + 100}px` }} />
-            </div>
-          </div>
-
-          {/* Branch Nodes */}
-          <div className="flex gap-3 mt-4">
-            {/* Default Branch (All) */}
-            <div className="flex flex-col items-center">
-              <div className="w-0.5 h-6 bg-border" />
-              <div className="px-3 py-2 rounded-lg border-2 border-border bg-background text-xs min-w-[100px] text-center">
-                <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                  <Users className="w-3 h-3" />
-                  <span className="font-medium">Todos</span>
+            {/* Branch Nodes */}
+            <div className="flex justify-center mt-16 relative z-10" style={{ gap: branchWidth - 100 }}>
+              {/* Default Branch (All) */}
+              <div 
+                className="flex flex-col items-center"
+                style={{ width: 100 }}
+              >
+                <div className="px-3 py-2.5 rounded-xl border-2 border-border bg-background/95 text-xs min-w-[100px] text-center shadow-md backdrop-blur-sm hover:shadow-lg transition-all">
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+                    <Users className="w-3.5 h-3.5" />
+                    <span className="font-semibold">Todos</span>
+                  </div>
+                  <div className="text-foreground font-medium">{tasks.length} tareas</div>
                 </div>
-                <div className="text-foreground">{tasks.length} tareas</div>
               </div>
+
+              {/* Rule Branches */}
+              {block.rules.map((rule) => (
+                <div 
+                  key={rule.id} 
+                  className="flex flex-col items-center"
+                  style={{ width: 100 }}
+                >
+                  <button
+                    onClick={() => setSelectedNode(`rule-${rule.id}`)}
+                    className={cn(
+                      "px-3 py-2.5 rounded-xl border-2 text-xs min-w-[100px] text-center transition-all shadow-md backdrop-blur-sm",
+                      selectedNode === `rule-${rule.id}`
+                        ? "border-accent bg-accent/15 ring-4 ring-accent/20 scale-105 shadow-lg"
+                        : "border-accent/40 bg-accent/5 hover:border-accent hover:shadow-lg"
+                    )}
+                  >
+                    <div className="flex items-center justify-center gap-1.5 text-accent mb-1">
+                      <GitBranch className="w-3.5 h-3.5" />
+                      <span className="font-semibold capitalize truncate">{rule.condition.attribute}</span>
+                    </div>
+                    <div className="text-muted-foreground text-[10px] truncate">
+                      = {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
+                    </div>
+                  </button>
+                </div>
+              ))}
             </div>
 
-            {/* Rule Branches */}
-            {block.rules.map((rule) => (
-              <div key={rule.id} className="flex flex-col items-center">
-                <div className="w-0.5 h-6 bg-accent" />
-                <button
-                  onClick={() => setSelectedNode(`rule-${rule.id}`)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg border-2 text-xs min-w-[100px] text-center transition-all",
-                    selectedNode === `rule-${rule.id}`
-                      ? "border-accent bg-accent/10 ring-2 ring-accent/30"
-                      : "border-accent/50 bg-accent/5 hover:border-accent"
-                  )}
-                >
-                  <div className="flex items-center justify-center gap-1 text-accent mb-1">
-                    <GitBranch className="w-3 h-3" />
-                    <span className="font-medium capitalize">{rule.condition.attribute}</span>
-                  </div>
-                  <div className="text-muted-foreground text-[10px] truncate max-w-[80px]">
-                    = {typeof rule.condition.value === 'string' ? rule.condition.value || '...' : '...'}
-                  </div>
-                </button>
-              </div>
-            ))}
+            {/* Add Rule Button */}
+            <button
+              onClick={() => {
+                handleAddRule();
+                setSelectedNode('decision');
+              }}
+              className="mt-6 relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-accent/40 text-xs text-accent hover:bg-accent/10 hover:border-accent transition-all"
+            >
+              <Plus className="w-3 h-3" />
+              Nueva rama
+            </button>
           </div>
         </div>
       </div>
