@@ -100,8 +100,7 @@ export default function JourneyPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
+    <div className="h-screen flex flex-col overflow-hidden">
       <header className="border-b border-border bg-card flex-shrink-0">
         <div className="h-16 px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -245,13 +244,13 @@ export default function JourneyPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {mainTab === 'builder' && (
           <>
             {builderView === 'timeline' ? (
               <TimelineView journey={journey} onBlockEdit={handleBlockEdit} />
             ) : (
-              <div className="absolute inset-0">
+              <div className="h-full w-full">
                 <TreeView journey={journey} onBlockEdit={handleBlockEdit} />
               </div>
             )}
