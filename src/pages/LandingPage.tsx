@@ -20,11 +20,15 @@ import {
   Users,
   Timer,
   Plus,
-  X,
   Mail,
   MapPin,
   Building2,
   Search,
+  BarChart3,
+  Percent,
+  Calendar,
+  UserMinus,
+  Award,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -199,6 +203,66 @@ export default function LandingPage() {
     if (lifecycleData.maxCount === 0) return 20;
     return Math.max(20, (count / lifecycleData.maxCount) * 100);
   };
+
+  // Calculate company-wide metrics
+  const companyMetrics = useMemo(() => {
+    // Average tenure calculation
+    const now = new Date();
+    const tenures = employees.map(emp => {
+      const startDate = new Date(emp.startDate);
+      const monthsWorked = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+      return Math.max(0, monthsWorked);
+    });
+    const avgTenureMonths = tenures.length > 0 
+      ? tenures.reduce((a, b) => a + b, 0) / tenures.length 
+      : 0;
+    const avgTenureYears = avgTenureMonths / 12;
+
+    // Turnover rate (annualized) - employees in offboarding / total * 12
+    const offboardingCount = lifecycleData.counts.offboarding;
+    const turnoverRateMonthly = employees.length > 0 
+      ? (offboardingCount / employees.length) * 100 
+      : 0;
+    const turnoverRateAnnual = turnoverRateMonthly * 12;
+
+    // Promotion rate - employees in promotion journeys this year
+    const promotionJourneys = journeys.filter(j => j.type === 'promotion');
+    let promotedCount = 0;
+    promotionJourneys.forEach(j => {
+      const metrics = getJourneyMetrics(j.id);
+      promotedCount += metrics.completed + metrics.totalEmployees;
+    });
+    const promotionRate = employees.length > 0 
+      ? (promotedCount / employees.length) * 100 
+      : 0;
+
+    // New hires rate (hiring + preboarding + onboarding / total)
+    const newHiresCount = lifecycleData.counts.hiring + lifecycleData.counts.preonboarding + lifecycleData.counts.onboarding;
+    const newHiresRate = employees.length > 0 
+      ? (newHiresCount / employees.length) * 100 
+      : 0;
+
+    // Retention rate (100 - turnover)
+    const retentionRate = Math.max(0, 100 - turnoverRateAnnual);
+
+    // Growth rate (new hires - offboarding / total)
+    const growthRate = employees.length > 0 
+      ? ((newHiresCount - offboardingCount) / employees.length) * 100 
+      : 0;
+
+    return {
+      avgTenureMonths: Math.round(avgTenureMonths * 10) / 10,
+      avgTenureYears: Math.round(avgTenureYears * 10) / 10,
+      turnoverRateAnnual: Math.round(turnoverRateAnnual * 10) / 10,
+      promotionRate: Math.round(promotionRate * 10) / 10,
+      newHiresRate: Math.round(newHiresRate * 10) / 10,
+      retentionRate: Math.round(retentionRate * 10) / 10,
+      growthRate: Math.round(growthRate * 10) / 10,
+      promotedCount,
+      newHiresCount,
+      offboardingCount,
+    };
+  }, [employees, lifecycleData.counts, journeys, getJourneyMetrics]);
 
   // Get employees for selected stage
   const selectedStageEmployees = useMemo(() => {
@@ -450,6 +514,97 @@ export default function LandingPage() {
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-rose-500 to-red-500" />
                 <span>Eventually leave</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Company Metrics */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Company Metrics
+          </h3>
+          <div className="grid grid-cols-6 gap-4">
+            {/* Average Tenure */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                {companyMetrics.avgTenureYears < 1 
+                  ? `${companyMetrics.avgTenureMonths}m` 
+                  : `${companyMetrics.avgTenureYears}y`}
+              </p>
+              <p className="text-xs text-gray-500">Avg Tenure</p>
+            </div>
+
+            {/* Retention Rate */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-emerald-600">{companyMetrics.retentionRate}%</p>
+              <p className="text-xs text-gray-500">Retention Rate</p>
+            </div>
+
+            {/* Turnover Rate */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+                  <UserMinus className="w-4 h-4 text-rose-600" />
+                </div>
+              </div>
+              <p className={cn(
+                "text-2xl font-bold",
+                companyMetrics.turnoverRateAnnual > 20 ? "text-rose-600" : 
+                companyMetrics.turnoverRateAnnual > 10 ? "text-amber-600" : "text-gray-900"
+              )}>
+                {companyMetrics.turnoverRateAnnual}%
+              </p>
+              <p className="text-xs text-gray-500">Turnover (Annual)</p>
+            </div>
+
+            {/* Promotion Rate */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-amber-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-amber-600">{companyMetrics.promotionRate}%</p>
+              <p className="text-xs text-gray-500">Promotion Rate</p>
+            </div>
+
+            {/* Growth Rate */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+                </div>
+              </div>
+              <p className={cn(
+                "text-2xl font-bold",
+                companyMetrics.growthRate > 0 ? "text-emerald-600" : 
+                companyMetrics.growthRate < 0 ? "text-rose-600" : "text-gray-900"
+              )}>
+                {companyMetrics.growthRate > 0 ? '+' : ''}{companyMetrics.growthRate}%
+              </p>
+              <p className="text-xs text-gray-500">Net Growth</p>
+            </div>
+
+            {/* New Hires */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-violet-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-violet-600">{companyMetrics.newHiresCount}</p>
+              <p className="text-xs text-gray-500">New Hires</p>
             </div>
           </div>
         </div>
