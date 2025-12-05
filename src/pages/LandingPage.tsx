@@ -113,15 +113,6 @@ export default function LandingPage() {
     const offboarding = employeesInOffboarding.size || Math.floor(totalEmployees * 0.015);
     const active = Math.max(0, totalEmployees - onboarding - preonboarding - offboarding - hiring);
 
-    const onboardingJourneys = journeys.filter(j => j.type === 'onboarding');
-    let onTrack = 0, atRisk = 0, delayed = 0;
-    onboardingJourneys.forEach(j => {
-      const m = getJourneyMetrics(j.id);
-      onTrack += m.onTrack;
-      atRisk += m.atRisk;
-      delayed += m.delayed;
-    });
-
     const counts = { hiring, preonboarding, onboarding, active, offboarding };
     const maxCount = Math.max(...Object.values(counts));
 
@@ -129,8 +120,28 @@ export default function LandingPage() {
       hiring: journeys.filter(j => j.type === 'hiring'),
       preonboarding: journeys.filter(j => j.type === 'onboarding'),
       onboarding: journeys.filter(j => j.type === 'onboarding'),
-      active: journeys.filter(j => ['promotion', 'role_change', 'training'].includes(j.type || '')),
+      active: journeys.filter(j => ['promotion', 'role_change', 'training', 'performance', 'engagement'].includes(j.type || '')),
       offboarding: journeys.filter(j => j.type === 'offboarding'),
+    };
+
+    // Calculate metrics per stage
+    const getStageMetrics = (stageJourneys: typeof journeys) => {
+      let onTrack = 0, atRisk = 0, delayed = 0;
+      stageJourneys.forEach(j => {
+        const m = getJourneyMetrics(j.id);
+        onTrack += m.onTrack;
+        atRisk += m.atRisk;
+        delayed += m.delayed;
+      });
+      return { onTrack, atRisk, delayed };
+    };
+
+    const metricsByStage: Record<string, { onTrack: number; atRisk: number; delayed: number }> = {
+      hiring: { onTrack: hiring, atRisk: 0, delayed: 0 }, // Simulated - no journey data
+      preonboarding: getStageMetrics(journeysByStage.preonboarding),
+      onboarding: getStageMetrics(journeysByStage.onboarding),
+      active: { onTrack: active, atRisk: 0, delayed: 0 }, // Active employees don't have journey metrics
+      offboarding: getStageMetrics(journeysByStage.offboarding),
     };
 
     // Assign employees to stages (simulated distribution)
@@ -176,7 +187,7 @@ export default function LandingPage() {
       counts,
       maxCount,
       totalEmployees,
-      onboardingMetrics: { onTrack, atRisk, delayed },
+      metricsByStage,
       journeysByStage,
       employeesByStage,
       promotionJourneys: journeys.filter(j => j.type === 'promotion'),
@@ -290,8 +301,8 @@ export default function LandingPage() {
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Employee Lifecycle</h2>
           <p className="text-gray-500 mt-1">
-            {lifecycleData.totalEmployees} employees • {journeys.length} journeys configured
-            <span className="text-xs text-gray-400 ml-2">• Click on a stage to see employees</span>
+            {lifecycleData.totalEmployees} employees across 5 stages
+            <span className="text-xs text-gray-400 ml-2">• Click on a stage to see details</span>
           </p>
         </div>
 
@@ -302,9 +313,10 @@ export default function LandingPage() {
             {lifecycleStages.map((stage, index) => {
               const count = lifecycleData.counts[stage.id as keyof typeof lifecycleData.counts];
               const stageJourneys = lifecycleData.journeysByStage[stage.id] || [];
+              const stageMetrics = lifecycleData.metricsByStage[stage.id];
               const Icon = stage.icon;
               const barHeight = getBarHeight(count);
-              const isOnboarding = stage.id === 'onboarding';
+              const hasIssues = stageMetrics.atRisk > 0 || stageMetrics.delayed > 0;
               const percentage = lifecycleData.totalEmployees > 0 
                 ? Math.round((count / lifecycleData.totalEmployees) * 100) 
                 : 0;
@@ -349,19 +361,19 @@ export default function LandingPage() {
                           <div className="text-[11px] opacity-80">{percentage}% of total</div>
                         </div>
                         
-                        {/* Middle: Status badges for onboarding */}
-                        {isOnboarding && (lifecycleData.onboardingMetrics.atRisk > 0 || lifecycleData.onboardingMetrics.delayed > 0) && (
+                        {/* Middle: Status badges */}
+                        {hasIssues && (
                           <div className="flex flex-col gap-1 items-center">
-                            {lifecycleData.onboardingMetrics.delayed > 0 && (
+                            {stageMetrics.delayed > 0 && (
                               <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/40 backdrop-blur-sm rounded text-[10px]">
                                 <Clock className="w-3 h-3" />
-                                {lifecycleData.onboardingMetrics.delayed} delayed
+                                {stageMetrics.delayed} delayed
                               </span>
                             )}
-                            {lifecycleData.onboardingMetrics.atRisk > 0 && (
+                            {stageMetrics.atRisk > 0 && (
                               <span className="flex items-center gap-1 px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded text-[10px]">
                                 <AlertTriangle className="w-3 h-3" />
-                                {lifecycleData.onboardingMetrics.atRisk} at risk
+                                {stageMetrics.atRisk} at risk
                               </span>
                             )}
                           </div>
@@ -378,7 +390,7 @@ export default function LandingPage() {
                           {stageJourneys.length > 0 ? (
                             <div className="flex items-center justify-center gap-1 text-[10px] opacity-90">
                               <GitBranch className="w-3 h-3" />
-                              <span>{stageJourneys.length} journey{stageJourneys.length > 1 ? 's' : ''}</span>
+                              <span>{stageJourneys.length} active</span>
                             </div>
                           ) : (
                             <div className="text-[10px] opacity-60">No journeys</div>
@@ -389,8 +401,7 @@ export default function LandingPage() {
                       {/* Click indicator */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
                         <div className="bg-white/90 rounded-full px-3 py-1.5 text-xs font-medium text-gray-700 shadow-lg">
-                          <Users className="w-3 h-3 inline mr-1" />
-                          View employees
+                          View details
                         </div>
                       </div>
                     </div>
@@ -530,41 +541,56 @@ export default function LandingPage() {
               Needs Attention
             </h3>
             <div className="space-y-3">
-              {lifecycleData.onboardingMetrics.delayed > 0 && (
-                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-red-500" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Delayed Onboarding</p>
-                      <p className="text-xs text-gray-500">{lifecycleData.onboardingMetrics.delayed} employees past SLA</p>
-                    </div>
+              {/* Show alerts for all stages with issues */}
+              {lifecycleStages.map(stage => {
+                const metrics = lifecycleData.metricsByStage[stage.id];
+                if (metrics.delayed === 0 && metrics.atRisk === 0) return null;
+                
+                return (
+                  <div key={stage.id}>
+                    {metrics.delayed > 0 && (
+                      <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100 mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center", stage.gradient)}>
+                            <stage.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{stage.name}: Delayed</p>
+                            <p className="text-xs text-gray-500">{metrics.delayed} employees past SLA</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedStage(stage.id); }}
+                          className="text-xs text-red-600 font-medium hover:underline"
+                        >
+                          Review →
+                        </button>
+                      </div>
+                    )}
+                    {metrics.atRisk > 0 && (
+                      <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-100">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center", stage.gradient)}>
+                            <stage.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{stage.name}: At Risk</p>
+                            <p className="text-xs text-gray-500">{metrics.atRisk} approaching deadline</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedStage(stage.id); }}
+                          className="text-xs text-amber-600 font-medium hover:underline"
+                        >
+                          Review →
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); navigate('/workflows'); }}
-                    className="text-xs text-red-600 font-medium hover:underline"
-                  >
-                    Review →
-                  </button>
-                </div>
-              )}
-              {lifecycleData.onboardingMetrics.atRisk > 0 && (
-                <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-100">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">At Risk</p>
-                      <p className="text-xs text-gray-500">{lifecycleData.onboardingMetrics.atRisk} approaching deadline</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); navigate('/workflows'); }}
-                    className="text-xs text-amber-600 font-medium hover:underline"
-                  >
-                    Review →
-                  </button>
-                </div>
-              )}
-              {lifecycleData.onboardingMetrics.delayed === 0 && lifecycleData.onboardingMetrics.atRisk === 0 && (
+                );
+              })}
+              {/* All clear message */}
+              {Object.values(lifecycleData.metricsByStage).every(m => m.delayed === 0 && m.atRisk === 0) && (
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
                   <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                   <div>
@@ -585,7 +611,7 @@ export default function LandingPage() {
                   <span className="text-gray-500">Onboarding Success</span>
                   <span className="font-bold text-emerald-600">
                     {lifecycleData.counts.onboarding > 0 
-                      ? Math.round((lifecycleData.onboardingMetrics.onTrack / lifecycleData.counts.onboarding) * 100) 
+                      ? Math.round((lifecycleData.metricsByStage.onboarding.onTrack / lifecycleData.counts.onboarding) * 100) 
                       : 100}%
                   </span>
                 </div>
@@ -594,7 +620,7 @@ export default function LandingPage() {
                     className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
                     style={{ 
                       width: `${lifecycleData.counts.onboarding > 0 
-                        ? (lifecycleData.onboardingMetrics.onTrack / lifecycleData.counts.onboarding) * 100 
+                        ? (lifecycleData.metricsByStage.onboarding.onTrack / lifecycleData.counts.onboarding) * 100 
                         : 100}%` 
                     }}
                   />
@@ -639,9 +665,9 @@ export default function LandingPage() {
                     <selectedStageInfo.icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <SheetTitle className="text-white text-xl">{selectedStageInfo.name}</SheetTitle>
+                    <SheetTitle className="text-white text-xl">{selectedStageInfo.name} Stage</SheetTitle>
                     <p className="text-white/80 text-sm">
-                      {lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]} employees • {lifecycleData.journeysByStage[selectedStage]?.length || 0} journeys
+                      {lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]} employees in this stage
                     </p>
                   </div>
                 </div>
@@ -659,7 +685,7 @@ export default function LandingPage() {
                   )}
                 >
                   <GitBranch className="w-4 h-4" />
-                  Journeys ({lifecycleData.journeysByStage[selectedStage]?.length || 0})
+                  Active Journeys ({lifecycleData.journeysByStage[selectedStage]?.length || 0})
                 </button>
                 <button
                   onClick={() => setPanelTab('employees')}
@@ -671,7 +697,7 @@ export default function LandingPage() {
                   )}
                 >
                   <Users className="w-4 h-4" />
-                  Employees ({lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]})
+                  People ({lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]})
                 </button>
               </div>
 
@@ -754,8 +780,10 @@ export default function LandingPage() {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                       <GitBranch className="w-12 h-12 mb-3 opacity-50" />
-                      <p className="text-sm font-medium mb-1">No journeys configured</p>
-                      <p className="text-xs text-gray-400 mb-4">Create a journey for this lifecycle stage</p>
+                      <p className="text-sm font-medium mb-1">No active journeys</p>
+                      <p className="text-xs text-gray-400 mb-4 text-center px-4">
+                        Create a journey to automate tasks for employees in the {selectedStageInfo?.name} stage
+                      </p>
                       <button
                         onClick={() => navigate('/workflows')}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"

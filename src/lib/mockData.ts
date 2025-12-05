@@ -285,11 +285,310 @@ export function generateMockData() {
     employeeProgress.push(progress);
   }
 
+  // ========== PERFORMANCE REVIEW JOURNEY (Active Stage) ==========
+  const perfReviewJourneyId = 'journey-perf-review-1';
+  
+  const perfReviewPeriods: Period[] = [
+    { id: 'perf-period-1', label: 'Preparation', offsetDays: -14, order: 0 },
+    { id: 'perf-period-2', label: 'Self Review', offsetDays: 0, order: 1 },
+    { id: 'perf-period-3', label: 'Manager Review', offsetDays: 7, order: 2 },
+    { id: 'perf-period-4', label: 'Calibration', offsetDays: 14, order: 3 },
+    { id: 'perf-period-5', label: 'Feedback', offsetDays: 21, order: 4 },
+  ];
+
+  const perfReviewBlocks: Block[] = [
+    {
+      id: 'perf-block-1',
+      name: 'Goal Setting Review',
+      journeyId: perfReviewJourneyId,
+      periodId: 'perf-period-1',
+      taskIds: ['perf-task-1', 'perf-task-2'],
+      rules: [],
+      dependencyBlockIds: [],
+      expectedDurationDays: 7,
+      description: 'Review and update goals before the performance cycle',
+      category: 'Performance',
+      order: 0,
+    },
+    {
+      id: 'perf-block-2',
+      name: 'Self Assessment',
+      journeyId: perfReviewJourneyId,
+      periodId: 'perf-period-2',
+      taskIds: ['perf-task-3', 'perf-task-4'],
+      rules: [],
+      dependencyBlockIds: ['perf-block-1'],
+      expectedDurationDays: 5,
+      description: 'Complete self-evaluation form',
+      category: 'Performance',
+      order: 0,
+    },
+    {
+      id: 'perf-block-3',
+      name: 'Manager Evaluation',
+      journeyId: perfReviewJourneyId,
+      periodId: 'perf-period-3',
+      taskIds: ['perf-task-5', 'perf-task-6'],
+      rules: [
+        {
+          id: 'perf-rule-1',
+          label: 'Skip level review for Seniors',
+          condition: { attribute: 'level', operator: 'equals', value: 'Senior' },
+          action: { type: 'add_task', addedTask: { title: 'Skip-level manager review', type: 'review' } },
+        },
+      ],
+      dependencyBlockIds: ['perf-block-2'],
+      expectedDurationDays: 7,
+      description: 'Manager completes evaluation',
+      category: 'Performance',
+      order: 0,
+    },
+    {
+      id: 'perf-block-4',
+      name: 'Feedback Meeting',
+      journeyId: perfReviewJourneyId,
+      periodId: 'perf-period-5',
+      taskIds: ['perf-task-7', 'perf-task-8'],
+      rules: [],
+      dependencyBlockIds: ['perf-block-3'],
+      expectedDurationDays: 3,
+      description: 'Deliver performance feedback to employee',
+      category: 'Performance',
+      order: 0,
+    },
+  ];
+
+  const perfReviewTasks: Task[] = [
+    { id: 'perf-task-1', blockId: 'perf-block-1', title: 'Review current goals', type: 'review', assigneeType: 'employee', order: 0 },
+    { id: 'perf-task-2', blockId: 'perf-block-1', title: 'Update goal progress', type: 'data_input', assigneeType: 'employee', order: 1 },
+    { id: 'perf-task-3', blockId: 'perf-block-2', title: 'Complete self-assessment form', type: 'data_input', assigneeType: 'employee', order: 0 },
+    { id: 'perf-task-4', blockId: 'perf-block-2', title: 'Request peer feedback', type: 'basic', assigneeType: 'employee', order: 1 },
+    { id: 'perf-task-5', blockId: 'perf-block-3', title: 'Review self-assessment', type: 'review', assigneeType: 'manager', order: 0 },
+    { id: 'perf-task-6', blockId: 'perf-block-3', title: 'Complete manager evaluation', type: 'data_input', assigneeType: 'manager', order: 1 },
+    { id: 'perf-task-7', blockId: 'perf-block-4', title: 'Schedule feedback meeting', type: 'basic', assigneeType: 'manager', order: 0 },
+    { id: 'perf-task-8', blockId: 'perf-block-4', title: 'Acknowledge feedback receipt', type: 'signature', assigneeType: 'employee', order: 1 },
+  ];
+
+  const perfReviewJourney: Journey = {
+    id: perfReviewJourneyId,
+    name: 'Q1 Performance Review',
+    type: 'training', // Using training as closest type for active employee processes
+    anchorEvent: 'custom',
+    periods: perfReviewPeriods,
+    blockIds: perfReviewBlocks.map((b) => b.id),
+    status: 'active',
+    description: 'Quarterly performance review cycle for all active employees',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // ========== eNPS SURVEY JOURNEY (Active Stage) ==========
+  const enpsJourneyId = 'journey-enps-1';
+  
+  const enpsPeriods: Period[] = [
+    { id: 'enps-period-1', label: 'Survey Launch', offsetDays: 0, order: 0 },
+    { id: 'enps-period-2', label: 'Reminder', offsetDays: 3, order: 1 },
+    { id: 'enps-period-3', label: 'Close & Analyze', offsetDays: 7, order: 2 },
+  ];
+
+  const enpsBlocks: Block[] = [
+    {
+      id: 'enps-block-1',
+      name: 'Complete Survey',
+      journeyId: enpsJourneyId,
+      periodId: 'enps-period-1',
+      taskIds: ['enps-task-1'],
+      rules: [],
+      dependencyBlockIds: [],
+      expectedDurationDays: 3,
+      description: 'Employee completes the eNPS survey',
+      category: 'Feedback',
+      order: 0,
+    },
+    {
+      id: 'enps-block-2',
+      name: 'Manager Review Results',
+      journeyId: enpsJourneyId,
+      periodId: 'enps-period-3',
+      taskIds: ['enps-task-2', 'enps-task-3'],
+      rules: [],
+      dependencyBlockIds: ['enps-block-1'],
+      expectedDurationDays: 5,
+      description: 'Managers review team results and plan actions',
+      category: 'Feedback',
+      order: 0,
+    },
+  ];
+
+  const enpsTasks: Task[] = [
+    { id: 'enps-task-1', blockId: 'enps-block-1', title: 'Complete eNPS survey', type: 'data_input', assigneeType: 'employee', order: 0 },
+    { id: 'enps-task-2', blockId: 'enps-block-2', title: 'Review team results', type: 'review', assigneeType: 'manager', order: 0 },
+    { id: 'enps-task-3', blockId: 'enps-block-2', title: 'Create action plan', type: 'data_input', assigneeType: 'manager', order: 1 },
+  ];
+
+  const enpsJourney: Journey = {
+    id: enpsJourneyId,
+    name: 'Monthly eNPS Survey',
+    type: 'training',
+    anchorEvent: 'custom',
+    periods: enpsPeriods,
+    blockIds: enpsBlocks.map((b) => b.id),
+    status: 'active',
+    description: 'Monthly employee satisfaction survey',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // ========== OFFBOARDING JOURNEY ==========
+  const offboardingJourneyId = 'journey-offboarding-1';
+  
+  const offboardingPeriods: Period[] = [
+    { id: 'off-period-1', label: 'Notice Period', offsetDays: -14, order: 0 },
+    { id: 'off-period-2', label: 'Last Week', offsetDays: -7, order: 1 },
+    { id: 'off-period-3', label: 'Last Day', offsetDays: 0, order: 2 },
+    { id: 'off-period-4', label: 'Post-departure', offsetDays: 7, order: 3 },
+  ];
+
+  const offboardingBlocks: Block[] = [
+    {
+      id: 'off-block-1',
+      name: 'Knowledge Transfer',
+      journeyId: offboardingJourneyId,
+      periodId: 'off-period-1',
+      taskIds: ['off-task-1', 'off-task-2'],
+      rules: [
+        {
+          id: 'off-rule-1',
+          label: 'Manager handover for leads',
+          condition: { attribute: 'level', operator: 'equals', value: 'Lead' },
+          action: { type: 'add_task', addedTask: { title: 'Complete leadership handover document', type: 'data_input' } },
+        },
+      ],
+      dependencyBlockIds: [],
+      expectedDurationDays: 10,
+      description: 'Document and transfer knowledge to team',
+      category: 'Operations',
+      order: 0,
+    },
+    {
+      id: 'off-block-2',
+      name: 'Exit Interview',
+      journeyId: offboardingJourneyId,
+      periodId: 'off-period-2',
+      taskIds: ['off-task-3', 'off-task-4'],
+      rules: [],
+      dependencyBlockIds: ['off-block-1'],
+      expectedDurationDays: 3,
+      description: 'Conduct exit interview and collect feedback',
+      category: 'HR',
+      order: 0,
+    },
+    {
+      id: 'off-block-3',
+      name: 'IT Offboarding',
+      journeyId: offboardingJourneyId,
+      periodId: 'off-period-3',
+      taskIds: ['off-task-5', 'off-task-6', 'off-task-7'],
+      rules: [],
+      dependencyBlockIds: ['off-block-2'],
+      expectedDurationDays: 1,
+      description: 'Revoke access and collect equipment',
+      category: 'IT',
+      order: 0,
+    },
+    {
+      id: 'off-block-4',
+      name: 'Final Settlement',
+      journeyId: offboardingJourneyId,
+      periodId: 'off-period-4',
+      taskIds: ['off-task-8', 'off-task-9'],
+      rules: [],
+      dependencyBlockIds: ['off-block-3'],
+      expectedDurationDays: 5,
+      description: 'Process final payments and documentation',
+      category: 'Finance',
+      order: 0,
+    },
+  ];
+
+  const offboardingTasks: Task[] = [
+    { id: 'off-task-1', blockId: 'off-block-1', title: 'Document ongoing projects', type: 'data_input', assigneeType: 'employee', order: 0 },
+    { id: 'off-task-2', blockId: 'off-block-1', title: 'Train replacement', type: 'basic', assigneeType: 'employee', order: 1 },
+    { id: 'off-task-3', blockId: 'off-block-2', title: 'Schedule exit interview', type: 'basic', assigneeType: 'hr_manager', order: 0 },
+    { id: 'off-task-4', blockId: 'off-block-2', title: 'Complete exit survey', type: 'data_input', assigneeType: 'employee', order: 1 },
+    { id: 'off-task-5', blockId: 'off-block-3', title: 'Return laptop', type: 'basic', assigneeType: 'employee', order: 0 },
+    { id: 'off-task-6', blockId: 'off-block-3', title: 'Revoke all access', type: 'basic', assigneeType: 'it_admin', order: 1 },
+    { id: 'off-task-7', blockId: 'off-block-3', title: 'Backup employee data', type: 'basic', assigneeType: 'it_admin', order: 2 },
+    { id: 'off-task-8', blockId: 'off-block-4', title: 'Process final paycheck', type: 'basic', assigneeType: 'hr_manager', order: 0 },
+    { id: 'off-task-9', blockId: 'off-block-4', title: 'Send separation letter', type: 'basic', assigneeType: 'hr_manager', order: 1 },
+  ];
+
+  const offboardingJourney: Journey = {
+    id: offboardingJourneyId,
+    name: 'Standard Offboarding',
+    type: 'offboarding',
+    anchorEvent: 'end_date',
+    periods: offboardingPeriods,
+    blockIds: offboardingBlocks.map((b) => b.id),
+    status: 'active',
+    description: 'Standard offboarding process for departing employees',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Generate some progress for performance review (active employees)
+  const perfReviewProgress: EmployeeJourneyProgress[] = [];
+  const activeEmployeeCount = Math.floor(employees.length * 0.3); // 30% in perf review
+  for (let i = 0; i < activeEmployeeCount; i++) {
+    const employee = employees[i];
+    const blockIndex = Math.floor(Math.random() * perfReviewBlocks.length);
+    const statuses: ('on_track' | 'at_risk' | 'delayed')[] = ['on_track', 'on_track', 'on_track', 'at_risk', 'delayed'];
+    
+    perfReviewProgress.push({
+      id: `perf-progress-${i}`,
+      employeeId: employee.id,
+      journeyId: perfReviewJourneyId,
+      currentBlockId: perfReviewBlocks[blockIndex].id,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      startedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      completedBlockIds: perfReviewBlocks.slice(0, blockIndex).map(b => b.id),
+      blockProgress: perfReviewBlocks.map((block, idx) => ({
+        blockId: block.id,
+        status: idx < blockIndex ? 'completed' : idx === blockIndex ? 'in_progress' : 'pending',
+        daysSpent: idx <= blockIndex ? Math.floor(Math.random() * 5) + 1 : 0,
+      })),
+    });
+  }
+
+  // Generate some progress for offboarding
+  const offboardingProgress: EmployeeJourneyProgress[] = [];
+  const offboardingCount = Math.floor(employees.length * 0.02); // 2% offboarding
+  for (let i = 0; i < offboardingCount; i++) {
+    const employee = employees[employees.length - 1 - i]; // Last employees
+    const blockIndex = Math.floor(Math.random() * offboardingBlocks.length);
+    const statuses: ('on_track' | 'at_risk' | 'delayed')[] = ['on_track', 'on_track', 'at_risk'];
+    
+    offboardingProgress.push({
+      id: `off-progress-${i}`,
+      employeeId: employee.id,
+      journeyId: offboardingJourneyId,
+      currentBlockId: offboardingBlocks[blockIndex].id,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      startedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      completedBlockIds: offboardingBlocks.slice(0, blockIndex).map(b => b.id),
+      blockProgress: offboardingBlocks.map((block, idx) => ({
+        blockId: block.id,
+        status: idx < blockIndex ? 'completed' : idx === blockIndex ? 'in_progress' : 'pending',
+        daysSpent: idx <= blockIndex ? Math.floor(Math.random() * 3) + 1 : 0,
+      })),
+    });
+  }
+
   return {
-    journeys: [journey],
-    blocks,
-    tasks,
+    journeys: [journey, perfReviewJourney, enpsJourney, offboardingJourney],
+    blocks: [...blocks, ...perfReviewBlocks, ...enpsBlocks, ...offboardingBlocks],
+    tasks: [...tasks, ...perfReviewTasks, ...enpsTasks, ...offboardingTasks],
     employees,
-    employeeProgress,
+    employeeProgress: [...employeeProgress, ...perfReviewProgress, ...offboardingProgress],
   };
 }
