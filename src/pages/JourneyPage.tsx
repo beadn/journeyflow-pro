@@ -335,7 +335,10 @@ export default function JourneyPage() {
       <AIJourneyChat
         isOpen={isAIChatOpen}
         onClose={() => setIsAIChatOpen(false)}
-        onJourneyCreated={() => setIsAIChatOpen(false)}
+        onJourneyCreated={(newJourneyId) => {
+          setIsAIChatOpen(false);
+          navigate(`/journey/${newJourneyId}`);
+        }}
         existingJourneyId={journeyId}
       />
     </div>
