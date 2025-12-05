@@ -156,7 +156,45 @@ JourneyFlow Pro provides a unified platform to:
   - Send reminder
   - Unblock
 
-### 4. Data Model
+### 4. AI Assistant
+
+#### 4.1 AI Journey Creator
+- Natural language interface for journey creation
+- Available from:
+  - Journeys page ("Create with AI" button)
+  - Builder toolbar ("AI Assistant" button)
+
+#### 4.2 Create Mode (New Journey)
+- Quick start templates:
+  - 🛠️ Engineering Onboarding
+  - 💼 Sales Onboarding
+  - 👋 Offboarding
+  - 🎯 Custom Journey
+- Generates complete journey structure:
+  - Time periods with appropriate offsets
+  - Blocks with category assignments
+  - Tasks with assignee types
+- Interactive preview with metrics (periods, blocks, tasks)
+- One-click journey creation
+
+#### 4.3 Edit Mode (Existing Journey)
+- Contextual awareness of current journey state
+- Capabilities:
+  - Add new blocks to specific periods
+  - Add new time periods (60, 90, 180 days, 1 year)
+  - Get AI-powered improvement suggestions
+- Smart detection of:
+  - Missing review periods
+  - Compliance training gaps
+  - Feedback block opportunities
+
+#### 4.4 Conversation Features
+- Chat-based interface with message history
+- Quick action buttons for common operations
+- Visual previews before applying changes
+- Confirmation dialogs for modifications
+
+### 5. Data Model
 
 ```typescript
 // Journey
@@ -331,23 +369,31 @@ interface EmployeeJourneyProgress {
 - [x] Health score and insights
 - [x] Completion timeline graph
 
-### Phase 3: Collaboration (Future)
+### Phase 3: AI Co-Creation ✅
+- [x] AI Journey Creator chat interface
+- [x] Pre-built journey templates (Engineering, Sales, Offboarding)
+- [x] Natural language journey creation
+- [x] Edit mode for existing journeys
+- [x] AI-powered improvement suggestions
+- [x] Quick action buttons and previews
+
+### Phase 4: Collaboration (Future)
 - [ ] Multi-user support
 - [ ] Role-based permissions
 - [ ] Comments and notes on blocks
 - [ ] Activity audit log
 - [ ] Email notifications
 
-### Phase 4: Integration (Future)
+### Phase 5: Integration (Future)
 - [ ] REST API for external systems
 - [ ] Webhook triggers
 - [ ] HRIS integrations (Factorial, Workday, BambooHR)
 - [ ] Slack/Teams notifications
 - [ ] Calendar integrations
 
-### Phase 5: Advanced Features (Future)
+### Phase 6: Advanced Features (Future)
 - [ ] Journey templates marketplace
-- [ ] AI-powered recommendations
+- [ ] Real AI integration (OpenAI/Claude API)
 - [ ] Employee self-service portal
 - [ ] Advanced analytics and reporting
 - [ ] Custom field definitions
@@ -369,6 +415,10 @@ interface EmployeeJourneyProgress {
 | **On Track** | Employee progressing within expected timeframes |
 | **At Risk** | Employee approaching SLA deadline |
 | **Delayed** | Employee has exceeded SLA |
+| **AI Assistant** | Chat-based interface for creating/editing journeys with natural language |
+| **Journey Template** | Pre-built journey structure (Engineering, Sales, Offboarding) |
+| **Edit Mode** | AI Assistant mode for modifying existing journeys |
+| **Create Mode** | AI Assistant mode for building new journeys from scratch |
 
 ---
 
@@ -382,5 +432,5 @@ interface EmployeeJourneyProgress {
 ---
 
 *Last Updated: December 2025*
-*Version: 1.0.0*
+*Version: 1.1.0* - Added AI Co-Creation
 
