@@ -1,15 +1,24 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   ChevronRight,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  Home,
+  GitBranch,
+  HelpCircle
 } from 'lucide-react';
+
+const navItems = [
+  { to: '/', icon: Home, label: 'Home' },
+  { to: '/workflows', icon: GitBranch, label: 'Journeys' },
+];
 
 export function AppSidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
+  const location = useLocation();
 
   return (
     <>
@@ -29,10 +38,10 @@ export function AppSidebar() {
           !isExpanded && "overflow-hidden lg:overflow-visible"
         )}
       >
-        {/* Logo - links to workflows */}
+        {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-          <NavLink to="/workflows" className="flex items-center gap-3 group">
-            <div className="relative w-9 h-9">
+          <NavLink to="/" className="flex items-center gap-3 group">
+            <div className="relative w-9 h-9 flex-shrink-0">
               {/* Gradient background - Factorial red */}
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF6B6B] via-[#FF5252] to-[#E53935] shadow-lg shadow-red-500/30 group-hover:shadow-red-500/50 transition-shadow" />
               {/* Inner glow */}
@@ -51,8 +60,43 @@ export function AppSidebar() {
           </NavLink>
         </div>
 
-        {/* Empty nav - could add more sections in the future */}
-        <nav className="flex-1 p-3" />
+        {/* Navigation */}
+        <nav className="flex-1 p-3 space-y-1">
+          {navItems.map((item) => {
+            const isActive = item.to === '/' 
+              ? location.pathname === '/' 
+              : location.pathname.startsWith(item.to) || location.pathname.startsWith('/journey');
+            
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                  isActive 
+                    ? "bg-red-50 text-red-600 font-medium" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-red-500")} />
+                {isExpanded && <span className="text-sm">{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Help link */}
+        <div className="p-3 border-t border-sidebar-border">
+          <a
+            href="https://github.com/beadn/journeyflow-pro"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+          >
+            <HelpCircle className="w-5 h-5 flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Documentation</span>}
+          </a>
+        </div>
 
         {/* Collapse button */}
         <div className="p-3 border-t border-sidebar-border hidden lg:block">
