@@ -5,6 +5,7 @@ import { TimelineView } from '@/components/builder/TimelineView';
 import { TreeView } from '@/components/builder/TreeView';
 import { BlockEditorModal } from '@/components/builder/BlockEditorModal';
 import { JourneyPreviewModal } from '@/components/builder/JourneyPreviewModal';
+import { JourneySettingsModal } from '@/components/builder/JourneySettingsModal';
 import { MonitorByEmployee } from '@/components/monitor/MonitorByEmployee';
 import { MonitorByJourney } from '@/components/monitor/MonitorByJourney';
 import { MonitorByBlock } from '@/components/monitor/MonitorByBlock';
@@ -22,6 +23,7 @@ import {
   BarChart3,
   Pencil,
   Eye,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -55,6 +57,7 @@ export default function JourneyPage() {
   const [monitorView, setMonitorView] = useState<MonitorView>('overview');
   const [isBlockEditorOpen, setIsBlockEditorOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const { 
     journeys,
@@ -120,6 +123,15 @@ export default function JourneyPage() {
                 <span className="capitalize">{journey.type.replace('_', ' ')}</span>
                 <span className="text-border">•</span>
                 <span>Anchor: <span className="font-medium text-foreground">{formatAnchorEvent(journey.anchorEvent)}</span></span>
+                {journey.eligibilityCriteria && journey.eligibilityCriteria.length > 0 && (
+                  <>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-1 text-indigo-600">
+                      <Target className="w-3 h-3" />
+                      {journey.eligibilityCriteria.length} {journey.eligibilityCriteria.length === 1 ? 'filtro' : 'filtros'}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
 
@@ -170,9 +182,9 @@ export default function JourneyPage() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => {}}>
+                <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                  Configuración
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDuplicate}>
                   <Copy className="w-4 h-4 mr-2" />
@@ -193,62 +205,70 @@ export default function JourneyPage() {
         </div>
 
         {/* Sub-navigation based on main tab */}
-        <div className="px-6 pb-3">
+        <div className="px-6 pb-0">
           {mainTab === 'builder' && (
             <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground mr-2">View:</span>
+              {/* Tab-style view selector with underline */}
+              <div className="flex items-center gap-1 border-b border-transparent">
                 <button
                   onClick={() => setBuilderView('timeline')}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                    "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors",
                     builderView === 'timeline' 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <LayoutGrid className="w-4 h-4" />
                   Timeline
+                  {builderView === 'timeline' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600 rounded-full" />
+                  )}
                 </button>
                 <button
                   onClick={() => setBuilderView('tree')}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                    "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors",
                     builderView === 'tree' 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <GitBranch className="w-3.5 h-3.5" />
+                  <GitBranch className="w-4 h-4" />
                   Tree
+                  {builderView === 'tree' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600 rounded-full" />
+                  )}
                 </button>
               </div>
               
               <button
                 onClick={() => setIsPreviewOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="w-4 h-4" />
                 Preview
               </button>
             </div>
           )}
           {mainTab === 'monitor' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-2">View:</span>
+            <div className="flex items-center gap-1">
               {monitorViews.map((view) => (
                 <button
                   key={view.id}
                   onClick={() => setMonitorView(view.id)}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                    "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors",
                     monitorView === view.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <view.icon className="w-3.5 h-3.5" />
+                  <view.icon className="w-4 h-4" />
                   {view.label}
+                  {monitorView === view.id && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600 rounded-full" />
+                  )}
                 </button>
               ))}
             </div>
@@ -290,6 +310,13 @@ export default function JourneyPage() {
       <JourneyPreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
+        journey={journey}
+      />
+
+      {/* Journey Settings Modal */}
+      <JourneySettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
         journey={journey}
       />
     </div>

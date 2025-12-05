@@ -10,6 +10,15 @@ export type JourneyStatus = "draft" | "active" | "archived";
 
 export type AnchorEvent = "start_date" | "last_day" | "promotion_date" | "cycle_start" | "custom";
 
+// Eligibility criteria for filtering which employees enter this journey
+export interface EligibilityCriterion {
+  id: string;
+  attribute: 'department' | 'location' | 'employeeType' | 'contractType' | 'level' | 'custom';
+  operator: 'equals' | 'not_equals' | 'in' | 'not_in';
+  value: string | string[];
+  customAttribute?: string; // For custom attribute names
+}
+
 export interface Journey {
   id: string;
   name: string;
@@ -19,6 +28,7 @@ export interface Journey {
   blockIds: string[];
   status: JourneyStatus;
   description?: string;
+  eligibilityCriteria?: EligibilityCriterion[]; // Conditions to filter eligible employees
   createdAt: string;
   updatedAt: string;
 }
@@ -97,6 +107,10 @@ export interface RuleAction {
 // Employee and Progress Tracking
 export type EmployeeStatus = "on_track" | "at_risk" | "delayed" | "completed";
 
+export type EmployeeType = 'Full-time' | 'Part-time' | 'Contractor' | 'Intern';
+export type ContractType = 'Permanent' | 'Temporary' | 'Freelance';
+export type EmployeeLevel = 'Junior' | 'Mid' | 'Senior' | 'Lead' | 'Manager' | 'Director' | 'VP' | 'C-Level';
+
 export interface Employee {
   id: string;
   name: string;
@@ -107,6 +121,9 @@ export interface Employee {
   manager: string;
   startDate: string;
   cohort?: string;
+  employeeType?: EmployeeType;
+  contractType?: ContractType;
+  level?: EmployeeLevel;
 }
 
 export interface EmployeeJourneyProgress {
@@ -116,6 +133,7 @@ export interface EmployeeJourneyProgress {
   currentBlockId: string;
   status: EmployeeStatus;
   startedAt: string;
+  completedAt?: string; // When the employee completed the entire journey
   completedBlockIds: string[];
   blockProgress: BlockProgress[];
 }

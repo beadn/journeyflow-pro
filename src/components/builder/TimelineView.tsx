@@ -5,6 +5,7 @@ import { BlockCard } from './BlockCard';
 import { PeriodColumn } from './PeriodColumn';
 import { AddBlockModal } from './AddBlockModal';
 import { cn } from '@/lib/utils';
+import { ArrowRightLeft, ArrowUpDown } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -107,28 +108,38 @@ export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
     <div className="h-full flex flex-col">
       {/* Toolbar */}
       <div className="px-6 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Layout:</span>
-          <div className="flex items-center bg-card rounded-lg p-0.5 border border-border">
+        <div className="flex items-center gap-3">
+          {/* Layout toggle - compact icon-only design */}
+          <div className="flex items-center gap-1.5 bg-card rounded-lg p-1 border border-border shadow-sm">
             <button
               onClick={() => setLayout('horizontal')}
+              title="Disposición horizontal"
               className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                layout === 'horizontal' ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                "p-1.5 rounded-md transition-all",
+                layout === 'horizontal' 
+                  ? "bg-gray-900 text-white shadow-sm" 
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               )}
             >
-              Horizontal
+              <ArrowRightLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setLayout('vertical')}
+              title="Disposición vertical"
               className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                layout === 'vertical' ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                "p-1.5 rounded-md transition-all",
+                layout === 'vertical' 
+                  ? "bg-gray-900 text-white shadow-sm" 
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               )}
             >
-              Vertical
+              <ArrowUpDown className="w-4 h-4" />
             </button>
           </div>
+          
+          <span className="text-xs text-muted-foreground">
+            {layout === 'horizontal' ? 'Horizontal' : 'Vertical'}
+          </span>
         </div>
         
         <button

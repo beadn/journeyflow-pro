@@ -1,13 +1,48 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useJourneyStore } from '@/stores/journeyStore';
-import { Plus, Users, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { 
+  Plus, 
+  Users, 
+  Clock, 
+  AlertTriangle,
+  Flame,
+  BarChart3,
+  ArrowRight,
+  Zap,
+  ChevronRight,
+  Filter,
+  Target
+} from 'lucide-react';
 import { CreateJourneyModal } from '@/components/builder/CreateJourneyModal';
+
+type StatusFilter = 'all' | 'active' | 'draft' | 'archived';
 
 export default function WorkflowsPage() {
   const navigate = useNavigate();
   const { journeys, getJourneyMetrics } = useJourneyStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
+  // Filter journeys
+  const filteredJourneys = useMemo(() => {
+    if (statusFilter === 'all') return journeys;
+    return journeys.filter(j => j.status === statusFilter);
+  }, [journeys, statusFilter]);
+
+  // Get journeys that need attention
+  const journeysNeedingAttention = useMemo(() => {
+    return journeys
+      .map(journey => {
+        const metrics = getJourneyMetrics(journey.id);
+        const problemScore = metrics.delayed * 3 + metrics.atRisk;
+        return { journey, metrics, problemScore };
+      })
+      .filter(item => item.problemScore > 0)
+      .sort((a, b) => b.problemScore - a.problemScore)
+      .slice(0, 3);
+  }, [journeys, getJourneyMetrics]);
 
   const handleJourneyCreated = (journeyId: string) => {
     navigate(`/journey/${journeyId}`);
@@ -15,132 +50,294 @@ export default function WorkflowsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'draft': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'archived': return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-      default: return 'bg-muted text-muted-foreground';
+      case 'active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'draft': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'archived': return 'bg-gray-100 text-gray-600 border-gray-200';
+      default: return 'bg-gray-100 text-gray-600';
     }
   };
 
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'onboarding': return '🚀';
+      case 'offboarding': return '👋';
+      case 'promotion': return '⭐';
+      case 'role_change': return '🔄';
+      case 'performance_cycle': return '📊';
+      default: return '📋';
+    }
+  };
+
+  const getAttributeLabel = (attr: string) => {
+    const labels: Record<string, string> = {
+      department: 'Dept',
+      location: 'Ubicación',
+      employeeType: 'Tipo',
+      contractType: 'Contrato',
+      level: 'Nivel',
+    };
+    return labels[attr] || attr;
+  };
+
+  const getOperatorLabel = (op: string) => {
+    const labels: Record<string, string> = {
+      equals: '=',
+      not_equals: '≠',
+      in: '∈',
+      not_in: '∉',
+    };
+    return labels[op] || op;
+  };
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Employee Lifecycle Workflows</h1>
-          <p className="text-muted-foreground mt-1">Manage and monitor all your employee journey workflows</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Workflows</h1>
+            <p className="text-gray-500 mt-1">Gestiona el ciclo de vida de tus empleados</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo Workflow
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Workflow
-        </button>
-      </div>
 
-      {/* Workflow Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {journeys.map((journey) => {
-          const metrics = getJourneyMetrics(journey.id);
-          
-          return (
-            <div
-              key={journey.id}
-              className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              {/* Card Header */}
-              <div className="p-5 border-b border-border">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground text-lg">{journey.name}</h3>
-                    <p className="text-sm text-muted-foreground capitalize mt-0.5">
-                      {journey.type.replace('_', ' ')}
-                    </p>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(journey.status)}`}>
-                    {journey.status}
-                  </span>
-                </div>
-                {journey.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{journey.description}</p>
-                )}
-              </div>
-
-              {/* Metrics */}
-              <div className="p-5 bg-muted/30">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-lg font-semibold text-foreground">{metrics?.totalEmployees || 0}</p>
-                      <p className="text-xs text-muted-foreground">Employees</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                    <div>
-                      <p className="text-lg font-semibold text-foreground">{metrics?.completionRate || 0}%</p>
-                      <p className="text-xs text-muted-foreground">Completion</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-lg font-semibold text-foreground">{metrics?.averageDuration || 0}d</p>
-                      <p className="text-xs text-muted-foreground">Avg. Duration</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    <div>
-                      <p className="text-lg font-semibold text-foreground">{metrics?.atRisk || 0}</p>
-                      <p className="text-xs text-muted-foreground">At Risk</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium text-foreground">{metrics?.onTrack || 0} on track</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${metrics?.completionRate || 0}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigate(`/journey/${journey.id}`)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    Open
-                  </button>
-                </div>
-              </div>
+        {/* Alerts Section */}
+        {journeysNeedingAttention.length > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-amber-50 to-red-50 rounded-xl border border-amber-200 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="w-5 h-5 text-amber-600" />
+              <h2 className="font-semibold text-gray-900">Requiere atención</h2>
             </div>
-          );
-        })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {journeysNeedingAttention.map(({ journey, metrics }) => (
+                <div 
+                  key={journey.id}
+                  onClick={() => navigate(`/journey/${journey.id}`)}
+                  className="bg-white rounded-lg p-4 border border-amber-200 cursor-pointer hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-lg">{getTypeIcon(journey.type)}</span>
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 mb-1">{journey.name}</h3>
+                  <div className="flex items-center gap-3 text-sm">
+                    {metrics.delayed > 0 && (
+                      <span className="text-red-600 flex items-center gap-1">
+                        <Flame className="w-3 h-3" />
+                        {metrics.delayed} retrasados
+                      </span>
+                    )}
+                    {metrics.atRisk > 0 && (
+                      <span className="text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {metrics.atRisk} en riesgo
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Empty state / Create new card */}
-        {journeys.length === 0 && (
+        {/* Filter & Workflows Section */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Tus Workflows</h2>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center bg-white rounded-lg border border-gray-200 p-0.5">
+              {[
+                { id: 'all' as const, label: 'Todos' },
+                { id: 'active' as const, label: 'Activos' },
+                { id: 'draft' as const, label: 'Borrador' },
+                { id: 'archived' as const, label: 'Archivados' },
+              ].map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setStatusFilter(filter.id)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                    statusFilter === filter.id 
+                      ? "bg-gray-900 text-white" 
+                      : "text-gray-600 hover:bg-gray-100"
+                  )}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Workflow Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredJourneys.map((journey) => {
+            const metrics = getJourneyMetrics(journey.id);
+            const hasProblems = metrics.delayed > 0 || metrics.atRisk > 0;
+            
+            return (
+              <div
+                key={journey.id}
+                onClick={() => navigate(`/journey/${journey.id}`)}
+                className={cn(
+                  "bg-white border rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl group",
+                  hasProblems ? "border-amber-200" : "border-gray-200"
+                )}
+              >
+                {/* Card Header */}
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{getTypeIcon(journey.type)}</span>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                          {journey.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {journey.type.replace('_', ' ')}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-full text-xs font-medium border",
+                      getStatusColor(journey.status)
+                    )}>
+                      {journey.status === 'active' ? 'Activo' : 
+                       journey.status === 'draft' ? 'Borrador' : 'Archivado'}
+                    </span>
+                  </div>
+                  
+                  {journey.description && (
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{journey.description}</p>
+                  )}
+
+                  {/* Eligibility Criteria */}
+                  {journey.eligibilityCriteria && journey.eligibilityCriteria.length > 0 && (
+                    <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                      <Target className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      {journey.eligibilityCriteria.map((criterion, idx) => (
+                        <span 
+                          key={criterion.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-medium"
+                        >
+                          {getAttributeLabel(criterion.attribute)} {getOperatorLabel(criterion.operator)} {Array.isArray(criterion.value) ? criterion.value.join(', ') : criterion.value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mini Stats */}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="font-semibold text-gray-900">{metrics.totalEmployees}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{metrics.averageDuration}d avg</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{journey.periods.length} periodos</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Section */}
+                <div className="px-5 pb-5">
+                  {/* Status breakdown bar */}
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex mb-3">
+                    {metrics.totalEmployees > 0 && (
+                      <>
+                        <div 
+                          className="bg-emerald-500 transition-all"
+                          style={{ width: `${(metrics.onTrack / metrics.totalEmployees) * 100}%` }}
+                        />
+                        <div 
+                          className="bg-blue-500 transition-all"
+                          style={{ width: `${(metrics.completed / metrics.totalEmployees) * 100}%` }}
+                        />
+                        <div 
+                          className="bg-amber-500 transition-all"
+                          style={{ width: `${(metrics.atRisk / metrics.totalEmployees) * 100}%` }}
+                        />
+                        <div 
+                          className="bg-red-500 transition-all"
+                          style={{ width: `${(metrics.delayed / metrics.totalEmployees) * 100}%` }}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Status labels */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-gray-600">{metrics.onTrack} ok</span>
+                      </span>
+                      {metrics.completed > 0 && (
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-gray-600">{metrics.completed} done</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {metrics.atRisk > 0 && (
+                        <span className="flex items-center gap-1 text-amber-600 font-medium">
+                          <AlertTriangle className="w-3 h-3" />
+                          {metrics.atRisk}
+                        </span>
+                      )}
+                      {metrics.delayed > 0 && (
+                        <span className="flex items-center gap-1 text-red-600 font-medium">
+                          <Flame className="w-3 h-3" />
+                          {metrics.delayed}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hover CTA */}
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm text-gray-500">Ver detalles</span>
+                  <ArrowRight className="w-4 h-4 text-indigo-600" />
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Create New Card */}
           <div
             onClick={() => setShowCreateModal(true)}
-            className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors min-h-[300px]"
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all min-h-[280px] group"
           >
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Plus className="w-6 h-6 text-primary" />
+            <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Plus className="w-7 h-7 text-indigo-600" />
             </div>
-            <h3 className="font-medium text-foreground mb-1">Create your first workflow</h3>
-            <p className="text-sm text-muted-foreground text-center">
-              Set up onboarding, offboarding, or custom employee journeys
+            <h3 className="font-semibold text-gray-900 mb-1">Crear nuevo workflow</h3>
+            <p className="text-sm text-gray-500 text-center max-w-[200px]">
+              Onboarding, offboarding, promociones o journeys personalizados
             </p>
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {filteredJourneys.length === 0 && journeys.length > 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Filter className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="font-medium text-gray-900 mb-1">No hay workflows con este filtro</h3>
+            <p className="text-sm text-gray-500">Prueba cambiando el filtro de estado</p>
           </div>
         )}
       </div>

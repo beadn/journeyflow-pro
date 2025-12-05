@@ -1,24 +1,15 @@
-import { useState } from 'react';
-import { Journey, JourneyType, AnchorEvent, Period, EligibilityCriterion } from '@/types/journey';
+import { useState, useEffect } from 'react';
+import { Journey, EligibilityCriterion, JourneyStatus, AnchorEvent } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, X, Users, Filter } from 'lucide-react';
+import { Plus, X, Users, Filter, Target, Trash2, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface CreateJourneyModalProps {
+interface JourneySettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreated: (journeyId: string) => void;
+  journey: Journey;
 }
-
-const journeyTypes: { value: JourneyType; label: string; icon: string }[] = [
-  { value: 'onboarding', label: 'Onboarding', icon: '🚀' },
-  { value: 'offboarding', label: 'Offboarding', icon: '👋' },
-  { value: 'promotion', label: 'Promoción', icon: '⭐' },
-  { value: 'role_change', label: 'Cambio de rol', icon: '🔄' },
-  { value: 'performance_cycle', label: 'Ciclo de rendimiento', icon: '📊' },
-  { value: 'custom', label: 'Personalizado', icon: '📋' },
-];
 
 const anchorEvents: { value: AnchorEvent; label: string }[] = [
   { value: 'start_date', label: 'Fecha de inicio' },
@@ -51,13 +42,25 @@ const attributeOptions: Record<string, string[]> = {
   level: ['Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director', 'VP', 'C-Level'],
 };
 
-export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourneyModalProps) {
-  const { addJourney } = useJourneyStore();
-  const [name, setName] = useState('');
-  const [type, setType] = useState<JourneyType>('onboarding');
-  const [anchorEvent, setAnchorEvent] = useState<AnchorEvent>('start_date');
-  const [eligibilityCriteria, setEligibilityCriteria] = useState<EligibilityCriterion[]>([]);
-  const [showEligibility, setShowEligibility] = useState(false);
+export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettingsModalProps) {
+  const { updateJourney } = useJourneyStore();
+  
+  const [name, setName] = useState(journey.name);
+  const [description, setDescription] = useState(journey.description || '');
+  const [status, setStatus] = useState<JourneyStatus>(journey.status);
+  const [anchorEvent, setAnchorEvent] = useState<AnchorEvent>(journey.anchorEvent);
+  const [eligibilityCriteria, setEligibilityCriteria] = useState<EligibilityCriterion[]>(
+    journey.eligibilityCriteria || []
+  );
+
+  // Reset form when journey changes
+  useEffect(() => {
+    setName(journey.name);
+    setDescription(journey.description || '');
+    setStatus(journey.status);
+    setAnchorEvent(journey.anchorEvent);
+    setEligibilityCriteria(journey.eligibilityCriteria || []);
+  }, [journey]);
 
   const addCriterion = () => {
     const newCriterion: EligibilityCriterion = {
@@ -79,48 +82,29 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
     setEligibilityCriteria(criteria => criteria.filter(c => c.id !== id));
   };
 
-  const handleCreate = () => {
-    const defaultPeriods: Period[] = [
-      { id: `period-${Date.now()}-1`, label: 'Día 0', offsetDays: 0, order: 0 },
-      { id: `period-${Date.now()}-2`, label: '+7 días', offsetDays: 7, order: 1 },
-      { id: `period-${Date.now()}-3`, label: '+30 días', offsetDays: 30, order: 2 },
-    ];
-
-    const journey: Journey = {
-      id: `journey-${Date.now()}`,
-      name: name || 'Nuevo Journey',
-      type,
+  const handleSave = () => {
+    updateJourney(journey.id, {
+      name,
+      description: description || undefined,
+      status,
       anchorEvent,
-      periods: defaultPeriods,
-      blockIds: [],
-      status: 'draft',
       eligibilityCriteria: eligibilityCriteria.length > 0 ? eligibilityCriteria : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    addJourney(journey);
-    onCreated(journey.id);
+    });
     onClose();
-    setName('');
-    setType('onboarding');
-    setAnchorEvent('start_date');
-    setEligibilityCriteria([]);
-    setShowEligibility(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg p-0">
         <DialogHeader className="px-6 py-4 border-b border-border">
-          <DialogTitle className="text-lg font-semibold">Crear nuevo Workflow</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Configuración del Workflow</DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Nombre del workflow
+              Nombre
             </label>
             <input
               type="text"
@@ -131,25 +115,42 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
             />
           </div>
 
-          {/* Type */}
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Descripción
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe el propósito de este workflow..."
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+            />
+          </div>
+
+          {/* Status */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Tipo de workflow
+              Estado
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {journeyTypes.map((jt) => (
+            <div className="flex gap-2">
+              {[
+                { value: 'draft', label: 'Borrador', color: 'bg-gray-100 border-gray-300 text-gray-700' },
+                { value: 'active', label: 'Activo', color: 'bg-emerald-100 border-emerald-300 text-emerald-700' },
+                { value: 'archived', label: 'Archivado', color: 'bg-amber-100 border-amber-300 text-amber-700' },
+              ].map((s) => (
                 <button
-                  key={jt.value}
-                  onClick={() => setType(jt.value)}
+                  key={s.value}
+                  onClick={() => setStatus(s.value as JourneyStatus)}
                   className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-center",
-                    type === jt.value
-                      ? "border-indigo-500 bg-indigo-50"
-                      : "border-gray-200 hover:border-gray-300"
+                    "flex-1 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all",
+                    status === s.value
+                      ? s.color + ' ring-2 ring-offset-1 ring-indigo-500'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
                   )}
                 >
-                  <span className="text-xl">{jt.icon}</span>
-                  <span className="text-xs font-medium">{jt.label}</span>
+                  {s.label}
                 </button>
               ))}
             </div>
@@ -178,15 +179,14 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
           <div className="border-t border-gray-200 pt-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
+                <Target className="w-4 h-4 text-indigo-500" />
                 <label className="text-sm font-medium text-foreground">
                   Condiciones de elegibilidad
                 </label>
-                <span className="text-xs text-gray-400">(opcional)</span>
               </div>
-              {!showEligibility && eligibilityCriteria.length === 0 && (
+              {eligibilityCriteria.length === 0 && (
                 <button
-                  onClick={() => setShowEligibility(true)}
+                  onClick={addCriterion}
                   className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                 >
                   + Añadir filtro
@@ -194,13 +194,13 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
               )}
             </div>
 
-            {(showEligibility || eligibilityCriteria.length > 0) && (
+            {eligibilityCriteria.length === 0 ? (
+              <p className="text-xs text-gray-500 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                Sin condiciones. Todos los empleados son elegibles para este workflow.
+              </p>
+            ) : (
               <div className="space-y-3">
-                <p className="text-xs text-gray-500 mb-2">
-                  Define qué empleados son elegibles para este workflow
-                </p>
-
-                {eligibilityCriteria.map((criterion, idx) => (
+                {eligibilityCriteria.map((criterion) => (
                   <div 
                     key={criterion.id}
                     className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200"
@@ -263,28 +263,37 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
                   Añadir condición
                 </button>
 
-                {eligibilityCriteria.length > 0 && (
-                  <div className="flex items-center gap-2 mt-2 p-2 bg-indigo-50 rounded-lg text-xs text-indigo-700">
-                    <Users className="w-4 h-4" />
-                    <span>
-                      Este workflow solo aplicará a empleados que cumplan {eligibilityCriteria.length === 1 ? 'esta condición' : 'todas estas condiciones'}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mt-2 p-2 bg-indigo-50 rounded-lg text-xs text-indigo-700">
+                  <Users className="w-4 h-4" />
+                  <span>
+                    Este workflow solo aplicará a empleados que cumplan {eligibilityCriteria.length === 1 ? 'esta condición' : 'todas estas condiciones'}
+                  </span>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Warning for active journeys */}
+          {journey.status === 'active' && status !== 'active' && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+              <div className="text-xs text-amber-700">
+                <strong>Atención:</strong> Cambiar el estado de un workflow activo puede afectar a los empleados que están actualmente en él.
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
           <button onClick={onClose} className="btn-ghost">
             Cancelar
           </button>
-          <button onClick={handleCreate} className="btn-primary">
-            Crear Workflow
+          <button onClick={handleSave} className="btn-primary">
+            Guardar cambios
           </button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

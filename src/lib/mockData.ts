@@ -178,13 +178,29 @@ export function generateMockData() {
   const departments = ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance', 'Product', 'Design', 'Operations'];
   const locations = ['New York', 'San Francisco', 'London', 'Berlin', 'Remote'];
   const managers = ['Sarah Connor', 'John Smith', 'Emily Chen', 'Michael Brown', 'Lisa Wang'];
+  const employeeTypes: ('Full-time' | 'Part-time' | 'Contractor' | 'Intern')[] = ['Full-time', 'Full-time', 'Full-time', 'Part-time', 'Contractor', 'Intern'];
+  const contractTypes: ('Permanent' | 'Temporary' | 'Freelance')[] = ['Permanent', 'Permanent', 'Permanent', 'Temporary', 'Freelance'];
+  const levels: ('Junior' | 'Mid' | 'Senior' | 'Lead' | 'Manager' | 'Director')[] = ['Junior', 'Junior', 'Mid', 'Mid', 'Senior', 'Lead', 'Manager', 'Director'];
 
   const employees: Employee[] = [];
   const employeeProgress: EmployeeJourneyProgress[] = [];
 
+  // Helper to generate a date within a specific month (0-5, where 5 is current month)
+  const getDateInMonth = (monthsAgo: number) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - monthsAgo);
+    date.setDate(Math.floor(Math.random() * 28) + 1); // Random day 1-28
+    return date;
+  };
+
   for (let i = 0; i < 150; i++) {
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    
+    // Start dates spread over the last 6 months with increasing trend
+    const monthsAgo = Math.floor(Math.random() * 6);
+    const startDate = getDateInMonth(monthsAgo + 1); // Started 1-7 months ago
+    
     const employee: Employee = {
       id: `emp-${i}`,
       name: `${firstName} ${lastName}`,
@@ -192,18 +208,47 @@ export function generateMockData() {
       department: departments[Math.floor(Math.random() * departments.length)],
       location: locations[Math.floor(Math.random() * locations.length)],
       manager: managers[Math.floor(Math.random() * managers.length)],
-      startDate: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
+      startDate: startDate.toISOString(),
       cohort: `Q${Math.floor(Math.random() * 4) + 1} 2024`,
+      employeeType: employeeTypes[Math.floor(Math.random() * employeeTypes.length)],
+      contractType: contractTypes[Math.floor(Math.random() * contractTypes.length)],
+      level: levels[Math.floor(Math.random() * levels.length)],
     };
     employees.push(employee);
 
-    // Generate progress
-    const currentBlockIndex = Math.floor(Math.random() * blocks.length);
-    const currentBlock = blocks[currentBlockIndex];
-    const completedBlocks = blocks.slice(0, currentBlockIndex);
+    // Determine if this employee has completed the journey
+    // Employees who started earlier are more likely to have completed
+    const daysSinceStart = Math.floor((Date.now() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+    const journeyDuration = 90; // ~90 days to complete
+    const completionProbability = Math.min(daysSinceStart / journeyDuration, 1) * 0.7; // 70% max completion rate
+    const hasCompleted = Math.random() < completionProbability;
     
-    const statuses: ('on_track' | 'at_risk' | 'delayed' | 'completed')[] = ['on_track', 'on_track', 'on_track', 'at_risk', 'delayed'];
-    const status = currentBlockIndex === blocks.length ? 'completed' : statuses[Math.floor(Math.random() * statuses.length)];
+    // Generate progress based on completion status
+    let currentBlockIndex: number;
+    let status: 'on_track' | 'at_risk' | 'delayed' | 'completed';
+    let completedAt: Date | undefined;
+    
+    if (hasCompleted) {
+      currentBlockIndex = blocks.length; // All blocks done
+      status = 'completed';
+      // Completed date is start date + journey duration (with some variation)
+      const daysToComplete = journeyDuration + Math.floor((Math.random() - 0.5) * 30);
+      completedAt = new Date(startDate.getTime() + daysToComplete * 24 * 60 * 60 * 1000);
+      // Make sure completion date is not in the future
+      if (completedAt > new Date()) {
+        completedAt = new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000);
+      }
+    } else {
+      // Calculate which block they should be on based on time elapsed
+      const expectedBlock = Math.floor((daysSinceStart / journeyDuration) * blocks.length);
+      currentBlockIndex = Math.min(Math.max(expectedBlock, 0), blocks.length - 1);
+      
+      const statuses: ('on_track' | 'at_risk' | 'delayed')[] = ['on_track', 'on_track', 'on_track', 'at_risk', 'delayed'];
+      status = statuses[Math.floor(Math.random() * statuses.length)];
+    }
+    
+    const currentBlock = blocks[Math.min(currentBlockIndex, blocks.length - 1)];
+    const completedBlocks = blocks.slice(0, currentBlockIndex);
 
     const progress: EmployeeJourneyProgress = {
       id: `progress-${i}`,
@@ -212,10 +257,11 @@ export function generateMockData() {
       currentBlockId: currentBlock.id,
       status,
       startedAt: employee.startDate,
+      completedAt: completedAt?.toISOString(),
       completedBlockIds: completedBlocks.map((b) => b.id),
       blockProgress: blocks.map((block, idx) => {
         const isCompleted = idx < currentBlockIndex;
-        const isCurrent = idx === currentBlockIndex;
+        const isCurrent = idx === currentBlockIndex && !hasCompleted;
         const sla = block.expectedDurationDays || 5;
         const daysSpent = isCompleted 
           ? sla + Math.floor((Math.random() - 0.3) * 3)
@@ -223,11 +269,15 @@ export function generateMockData() {
             ? Math.floor(Math.random() * (sla + 5))
             : 0;
 
+        // Calculate block dates based on progress
+        const blockStartDate = new Date(startDate.getTime() + (idx * 15) * 24 * 60 * 60 * 1000);
+        const blockEndDate = new Date(blockStartDate.getTime() + daysSpent * 24 * 60 * 60 * 1000);
+
         return {
           blockId: block.id,
-          status: isCompleted ? 'completed' : isCurrent ? 'in_progress' : 'pending',
-          startedAt: isCompleted || isCurrent ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-          completedAt: isCompleted ? new Date(Date.now() - Math.random() * 20 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+          status: isCompleted || (hasCompleted && idx < blocks.length) ? 'completed' : isCurrent ? 'in_progress' : 'pending',
+          startedAt: isCompleted || isCurrent || hasCompleted ? blockStartDate.toISOString() : undefined,
+          completedAt: isCompleted || hasCompleted ? blockEndDate.toISOString() : undefined,
           daysSpent,
         };
       }),
