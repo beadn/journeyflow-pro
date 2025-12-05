@@ -25,6 +25,7 @@ export default function LandingPage() {
     let onTrack = 0;
     let completed = 0;
     let atRisk = 0;
+    let delayed = 0;
 
     journeys.forEach(journey => {
       const metrics = getJourneyMetrics(journey.id);
@@ -32,6 +33,7 @@ export default function LandingPage() {
       onTrack += metrics.onTrack;
       completed += metrics.completed;
       atRisk += metrics.atRisk;
+      delayed += metrics.delayed;
     });
 
     const completionRate = totalEmployees > 0 
@@ -45,6 +47,7 @@ export default function LandingPage() {
       onTrack,
       completed,
       atRisk,
+      delayed,
       completionRate
     };
   }, [journeys, getJourneyMetrics]);
