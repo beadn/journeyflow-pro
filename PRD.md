@@ -156,15 +156,57 @@ JourneyFlow Pro provides a unified platform to:
   - Send reminder
   - Unblock
 
-### 4. AI Assistant
+### 4. Employee Lifecycle Overview (Home)
 
-#### 4.1 AI Journey Creator
+#### 4.1 Lifecycle Funnel
+- Visual horizontal funnel showing 5 lifecycle stages:
+  - 🟣 **Hiring** - Candidates in hiring process
+  - 🔵 **Pre-boarding** - Accepted, before start date
+  - 🟢 **Onboarding** - First 90 days
+  - 🟠 **Active** - Full employees
+  - 🔴 **Offboarding** - Leaving the company
+- Bar height proportional to employee count
+- Click on any stage to see details:
+  - **Active Journeys tab**: Journey cards with metrics (on track, at risk, delayed)
+  - **People tab**: Searchable employee list with status badges
+- Visual indicators for at-risk and delayed employees per stage
+
+#### 4.2 Company Metrics
+Key HR KPIs displayed in card grid:
+- 📅 **Average Tenure** - Mean time employees stay (months/years)
+- 👥 **Retention Rate** - Percentage of employees retained
+- 📉 **Turnover (Annual)** - Annualized turnover rate with color coding
+  - Green: < 10%
+  - Amber: 10-20%
+  - Red: > 20%
+- 🏆 **Promotion Rate** - Percentage of employees promoted
+- 📈 **Net Growth** - New hires minus departures
+- ➕ **New Hires** - Count of employees in hiring pipeline
+
+#### 4.3 Cross-Lifecycle Processes
+- **Promotions**: Career advancement journeys for active employees
+- **Role Changes**: Internal mobility journeys
+- Click to navigate to specific journey
+
+#### 4.4 Needs Attention
+- Alerts for delayed employees across all stages
+- At-risk warnings with direct links to review
+- "All Clear" indicator when no issues
+
+#### 4.5 Stage Configuration
+- Configurable time boundaries:
+  - Pre-boarding duration (days before start)
+  - Onboarding duration (days until "Active")
+
+### 5. AI Assistant
+
+#### 5.1 AI Journey Creator
 - Natural language interface for journey creation
 - Available from:
   - Journeys page ("Create with AI" button)
   - Builder toolbar ("AI Assistant" button)
 
-#### 4.2 Create Mode (New Journey)
+#### 5.2 Create Mode (New Journey)
 - Quick start templates:
   - 🛠️ Engineering Onboarding
   - 💼 Sales Onboarding
@@ -177,7 +219,7 @@ JourneyFlow Pro provides a unified platform to:
 - Interactive preview with metrics (periods, blocks, tasks)
 - One-click journey creation
 
-#### 4.3 Edit Mode (Existing Journey)
+#### 5.3 Edit Mode (Existing Journey)
 - Contextual awareness of current journey state
 - Capabilities:
   - Add new blocks to specific periods
@@ -188,13 +230,13 @@ JourneyFlow Pro provides a unified platform to:
   - Compliance training gaps
   - Feedback block opportunities
 
-#### 4.4 Conversation Features
+#### 5.4 Conversation Features
 - Chat-based interface with message history
 - Quick action buttons for common operations
 - Visual previews before applying changes
 - Confirmation dialogs for modifications
 
-### 5. Data Model
+### 6. Data Model
 
 ```typescript
 // Journey
@@ -377,21 +419,31 @@ interface EmployeeJourneyProgress {
 - [x] AI-powered improvement suggestions
 - [x] Quick action buttons and previews
 
-### Phase 4: Collaboration (Future)
+### Phase 4: Lifecycle Overview ✅
+- [x] Employee Lifecycle Funnel visualization
+- [x] 5-stage horizontal funnel (Hiring → Offboarding)
+- [x] Stage detail panel with tabs (Journeys/People)
+- [x] Company metrics dashboard (Tenure, Retention, Turnover, Promotions, Growth)
+- [x] Cross-lifecycle processes (Promotions, Role Changes)
+- [x] Needs Attention alerts aggregated across stages
+- [x] Configurable stage boundaries
+- [x] Mock journeys for Active stage (Performance Review, eNPS Survey)
+
+### Phase 5: Collaboration (Future)
 - [ ] Multi-user support
 - [ ] Role-based permissions
 - [ ] Comments and notes on blocks
 - [ ] Activity audit log
 - [ ] Email notifications
 
-### Phase 5: Integration (Future)
+### Phase 6: Integration (Future)
 - [ ] REST API for external systems
 - [ ] Webhook triggers
 - [ ] HRIS integrations (Factorial, Workday, BambooHR)
 - [ ] Slack/Teams notifications
 - [ ] Calendar integrations
 
-### Phase 6: Advanced Features (Future)
+### Phase 7: Advanced Features (Future)
 - [ ] Journey templates marketplace
 - [ ] Real AI integration (OpenAI/Claude API)
 - [ ] Employee self-service portal
@@ -406,6 +458,7 @@ interface EmployeeJourneyProgress {
 | Term | Definition |
 |------|------------|
 | **Journey** | A complete employee lifecycle process (e.g., Onboarding) |
+| **Stage** | A phase in the employee lifecycle funnel (Hiring, Pre-boarding, Onboarding, Active, Offboarding) |
 | **Period** | A time-based phase within a journey (e.g., "First Week") |
 | **Block** | A group of related tasks within a period |
 | **Task** | An individual action item assigned to someone |
@@ -419,6 +472,11 @@ interface EmployeeJourneyProgress {
 | **Journey Template** | Pre-built journey structure (Engineering, Sales, Offboarding) |
 | **Edit Mode** | AI Assistant mode for modifying existing journeys |
 | **Create Mode** | AI Assistant mode for building new journeys from scratch |
+| **Lifecycle Funnel** | Visual representation of employees across 5 lifecycle stages |
+| **Company Metrics** | HR KPIs including Tenure, Retention, Turnover, Promotions, Growth |
+| **Turnover Rate** | Annualized percentage of employees leaving the company |
+| **Retention Rate** | Percentage of employees staying (100% - Turnover) |
+| **Net Growth** | Difference between new hires and departures as percentage |
 
 ---
 
@@ -432,5 +490,5 @@ interface EmployeeJourneyProgress {
 ---
 
 *Last Updated: December 2025*
-*Version: 1.1.0* - Added AI Co-Creation
+*Version: 1.2.0* - Added Employee Lifecycle Funnel & Company Metrics
 
