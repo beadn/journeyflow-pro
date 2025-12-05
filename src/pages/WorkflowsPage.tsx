@@ -232,79 +232,91 @@ export default function WorkflowsPage() {
                     </div>
                   )}
 
-                  {/* Mini Stats */}
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <span className="font-semibold text-gray-900">{metrics.totalEmployees}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{metrics.averageDuration}d avg</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <BarChart3 className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{journey.periods.length} periods</span>
-                    </div>
-                  </div>
+                  {/* Mini Stats - Active employees only */}
+                  {(() => {
+                    const activeEmployees = metrics.onTrack + metrics.atRisk + metrics.delayed;
+                    const onTrackRate = activeEmployees > 0 
+                      ? Math.round((metrics.onTrack / activeEmployees) * 100) 
+                      : 100;
+                    
+                    return (
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <span className="font-semibold text-gray-900">{activeEmployees}</span>
+                          <span className="text-gray-400 text-xs">active</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">{metrics.averageDuration}d avg</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <BarChart3 className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">{journey.periods.length} periods</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* Progress Section */}
-                <div className="px-5 pb-5">
-                  {/* Status breakdown bar */}
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex mb-3">
-                    {metrics.totalEmployees > 0 && (
-                      <>
-                        <div 
-                          className="bg-emerald-500 transition-all"
-                          style={{ width: `${(metrics.onTrack / metrics.totalEmployees) * 100}%` }}
-                        />
-                        <div 
-                          className="bg-blue-500 transition-all"
-                          style={{ width: `${(metrics.completed / metrics.totalEmployees) * 100}%` }}
-                        />
-                        <div 
-                          className="bg-amber-500 transition-all"
-                          style={{ width: `${(metrics.atRisk / metrics.totalEmployees) * 100}%` }}
-                        />
-                        <div 
-                          className="bg-red-500 transition-all"
-                          style={{ width: `${(metrics.delayed / metrics.totalEmployees) * 100}%` }}
-                        />
-                      </>
-                    )}
-                  </div>
+                {/* Progress Section - Only active employees */}
+                {(() => {
+                  const activeEmployees = metrics.onTrack + metrics.atRisk + metrics.delayed;
+                  const onTrackRate = activeEmployees > 0 
+                    ? Math.round((metrics.onTrack / activeEmployees) * 100) 
+                    : 100;
+                  
+                  return (
+                    <div className="px-5 pb-5">
+                      {/* Status breakdown bar - only active employees */}
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex mb-3">
+                        {activeEmployees > 0 && (
+                          <>
+                            <div 
+                              className="bg-emerald-500 transition-all"
+                              style={{ width: `${(metrics.onTrack / activeEmployees) * 100}%` }}
+                            />
+                            <div 
+                              className="bg-amber-500 transition-all"
+                              style={{ width: `${(metrics.atRisk / activeEmployees) * 100}%` }}
+                            />
+                            <div 
+                              className="bg-red-500 transition-all"
+                              style={{ width: `${(metrics.delayed / activeEmployees) * 100}%` }}
+                            />
+                          </>
+                        )}
+                      </div>
 
-                  {/* Status labels */}
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-gray-600">{metrics.onTrack} ok</span>
-                      </span>
-                      {metrics.completed > 0 && (
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span className="text-gray-600">{metrics.completed} done</span>
-                        </span>
-                      )}
+                      {/* Status labels */}
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="text-emerald-600 font-medium">{onTrackRate}% on track</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {metrics.atRisk > 0 && (
+                            <span className="flex items-center gap-1 text-amber-600 font-medium">
+                              <AlertTriangle className="w-3 h-3" />
+                              {metrics.atRisk} at risk
+                            </span>
+                          )}
+                          {metrics.delayed > 0 && (
+                            <span className="flex items-center gap-1 text-red-600 font-medium">
+                              <Flame className="w-3 h-3" />
+                              {metrics.delayed} delayed
+                            </span>
+                          )}
+                          {metrics.atRisk === 0 && metrics.delayed === 0 && (
+                            <span className="text-gray-400">All good ✓</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {metrics.atRisk > 0 && (
-                        <span className="flex items-center gap-1 text-amber-600 font-medium">
-                          <AlertTriangle className="w-3 h-3" />
-                          {metrics.atRisk}
-                        </span>
-                      )}
-                      {metrics.delayed > 0 && (
-                        <span className="flex items-center gap-1 text-red-600 font-medium">
-                          <Flame className="w-3 h-3" />
-                          {metrics.delayed}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Hover CTA */}
                 <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
