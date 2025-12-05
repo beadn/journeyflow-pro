@@ -1,245 +1,775 @@
 import { useNavigate } from 'react-router-dom';
 import { useJourneyStore } from '@/stores/journeyStore';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { 
   Sparkles, 
   ArrowRight, 
-  Users, 
-  TrendingUp, 
-  Clock, 
-  Zap,
+  UserPlus,
+  Briefcase,
+  Star,
+  ArrowLeftRight,
+  LogOut,
+  ChevronRight,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
   CheckCircle2,
+  Settings2,
   GitBranch,
-  BarChart3,
-  ChevronRight
+  ExternalLink,
+  Users,
+  Timer,
+  Plus,
+  X,
+  Mail,
+  MapPin,
+  Building2,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Employee } from '@/types/journey';
+
+// Main lifecycle stages
+const lifecycleStages = [
+  { 
+    id: 'hiring', 
+    name: 'Hiring', 
+    icon: UserPlus, 
+    gradient: 'from-violet-500 to-purple-600',
+    avgDays: 21,
+    journeyTypes: ['hiring'],
+  },
+  { 
+    id: 'preonboarding', 
+    name: 'Pre-boarding', 
+    icon: Clock, 
+    gradient: 'from-blue-500 to-cyan-500',
+    avgDays: 14,
+    journeyTypes: ['onboarding'],
+  },
+  { 
+    id: 'onboarding', 
+    name: 'Onboarding', 
+    icon: TrendingUp, 
+    gradient: 'from-emerald-500 to-teal-500',
+    avgDays: 90,
+    journeyTypes: ['onboarding'],
+  },
+  { 
+    id: 'active', 
+    name: 'Active', 
+    icon: Briefcase, 
+    gradient: 'from-amber-500 to-orange-500',
+    avgDays: null,
+    journeyTypes: ['promotion', 'role_change', 'training'],
+  },
+  { 
+    id: 'offboarding', 
+    name: 'Offboarding', 
+    icon: LogOut, 
+    gradient: 'from-rose-500 to-red-500',
+    avgDays: 14,
+    journeyTypes: ['offboarding'],
+  },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { journeys, getJourneyMetrics, employeeProgress } = useJourneyStore();
+  const { journeys, employees, employeeProgress, getJourneyMetrics } = useJourneyStore();
+  const [showSettings, setShowSettings] = useState(false);
+  const [hoveredStage, setHoveredStage] = useState<string | null>(null);
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  
+  const [lifecycleConfig] = useState({
+    onboardingDays: 90,
+    preboardingDays: 14,
+  });
 
-  // Calculate global stats
-  const globalStats = useMemo(() => {
-    let totalEmployees = 0;
-    let onTrack = 0;
-    let completed = 0;
-    let atRisk = 0;
-    let delayed = 0;
-
-    journeys.forEach(journey => {
-      const metrics = getJourneyMetrics(journey.id);
-      totalEmployees += metrics.totalEmployees;
-      onTrack += metrics.onTrack;
-      completed += metrics.completed;
-      atRisk += metrics.atRisk;
-      delayed += metrics.delayed;
+  const lifecycleData = useMemo(() => {
+    const employeesInOnboarding = new Set<string>();
+    const employeesInOffboarding = new Set<string>();
+    const employeesCompleted = new Set<string>();
+    
+    employeeProgress.forEach(progress => {
+      const journey = journeys.find(j => j.id === progress.journeyId);
+      if (!journey) return;
+      
+      if (progress.status === 'completed') {
+        employeesCompleted.add(progress.employeeId);
+      } else if (journey.type === 'onboarding') {
+        employeesInOnboarding.add(progress.employeeId);
+      } else if (journey.type === 'offboarding') {
+        employeesInOffboarding.add(progress.employeeId);
+      }
     });
 
-    const completionRate = totalEmployees > 0 
-      ? Math.round((completed / totalEmployees) * 100) 
-      : 0;
+    const totalEmployees = employees.length;
+    const hiring = Math.floor(totalEmployees * 0.04); 
+    const preonboarding = Math.floor(employeesInOnboarding.size * 0.2);
+    const onboarding = Math.max(0, employeesInOnboarding.size - preonboarding);
+    const offboarding = employeesInOffboarding.size || Math.floor(totalEmployees * 0.015);
+    const active = Math.max(0, totalEmployees - onboarding - preonboarding - offboarding - hiring);
+
+    const onboardingJourneys = journeys.filter(j => j.type === 'onboarding');
+    let onTrack = 0, atRisk = 0, delayed = 0;
+    onboardingJourneys.forEach(j => {
+      const m = getJourneyMetrics(j.id);
+      onTrack += m.onTrack;
+      atRisk += m.atRisk;
+      delayed += m.delayed;
+    });
+
+    const counts = { hiring, preonboarding, onboarding, active, offboarding };
+    const maxCount = Math.max(...Object.values(counts));
+
+    const journeysByStage: Record<string, typeof journeys> = {
+      hiring: journeys.filter(j => j.type === 'hiring'),
+      preonboarding: journeys.filter(j => j.type === 'onboarding'),
+      onboarding: journeys.filter(j => j.type === 'onboarding'),
+      active: journeys.filter(j => ['promotion', 'role_change', 'training'].includes(j.type || '')),
+      offboarding: journeys.filter(j => j.type === 'offboarding'),
+    };
+
+    // Assign employees to stages (simulated distribution)
+    const allEmployeeIds = employees.map(e => e.id);
+    const employeesByStage: Record<string, string[]> = {
+      hiring: [],
+      preonboarding: [],
+      onboarding: [],
+      active: [],
+      offboarding: [],
+    };
+
+    // Real employees in onboarding/offboarding journeys
+    const onboardingEmployeeIds = Array.from(employeesInOnboarding);
+    const offboardingEmployeeIds = Array.from(employeesInOffboarding);
+    
+    // Split onboarding into preboarding and onboarding
+    employeesByStage.preonboarding = onboardingEmployeeIds.slice(0, preonboarding);
+    employeesByStage.onboarding = onboardingEmployeeIds.slice(preonboarding);
+    employeesByStage.offboarding = offboardingEmployeeIds.length > 0 
+      ? offboardingEmployeeIds 
+      : allEmployeeIds.slice(0, offboarding);
+    
+    // Simulate hiring (take some random employees as "candidates")
+    const usedIds = new Set([
+      ...employeesByStage.preonboarding,
+      ...employeesByStage.onboarding,
+      ...employeesByStage.offboarding
+    ]);
+    const availableForHiring = allEmployeeIds.filter(id => !usedIds.has(id));
+    employeesByStage.hiring = availableForHiring.slice(0, hiring);
+    
+    // Rest are active
+    const allUsedIds = new Set([
+      ...employeesByStage.hiring,
+      ...employeesByStage.preonboarding,
+      ...employeesByStage.onboarding,
+      ...employeesByStage.offboarding
+    ]);
+    employeesByStage.active = allEmployeeIds.filter(id => !allUsedIds.has(id));
 
     return {
-      totalJourneys: journeys.length,
-      activeJourneys: journeys.filter(j => j.status === 'active').length,
+      counts,
+      maxCount,
       totalEmployees,
-      onTrack,
-      completed,
-      atRisk,
-      delayed,
-      completionRate
+      onboardingMetrics: { onTrack, atRisk, delayed },
+      journeysByStage,
+      employeesByStage,
+      promotionJourneys: journeys.filter(j => j.type === 'promotion'),
+      roleChangeJourneys: journeys.filter(j => j.type === 'role_change'),
     };
-  }, [journeys, getJourneyMetrics]);
+  }, [journeys, employees, employeeProgress, getJourneyMetrics]);
+
+  const getBarHeight = (count: number) => {
+    if (lifecycleData.maxCount === 0) return 20;
+    return Math.max(20, (count / lifecycleData.maxCount) * 100);
+  };
+
+  // Get employees for selected stage
+  const selectedStageEmployees = useMemo(() => {
+    if (!selectedStage) return [];
+    const employeeIds = lifecycleData.employeesByStage[selectedStage] || [];
+    const stageEmployees = employeeIds
+      .map(id => employees.find(e => e.id === id))
+      .filter((e): e is Employee => e !== undefined);
+    
+    if (employeeSearch) {
+      const search = employeeSearch.toLowerCase();
+      return stageEmployees.filter(e => 
+        e.name.toLowerCase().includes(search) ||
+        e.email.toLowerCase().includes(search) ||
+        e.department.toLowerCase().includes(search)
+      );
+    }
+    return stageEmployees;
+  }, [selectedStage, lifecycleData.employeesByStage, employees, employeeSearch]);
+
+  const selectedStageInfo = lifecycleStages.find(s => s.id === selectedStage);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-red-200/30 to-orange-200/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-200/30 to-purple-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-gradient-to-br from-emerald-200/20 to-cyan-200/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          {/* Logo/Brand */}
-          <div className="inline-flex items-center gap-3 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 via-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/30">
-              <Sparkles className="w-7 h-7 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">JourneyFlow</h1>
+                <p className="text-xs text-gray-500">Employee Lifecycle</p>
+              </div>
             </div>
-            <div className="text-left">
-              <h1 className="text-2xl font-bold text-gray-900">JourneyFlow</h1>
-              <p className="text-sm text-gray-500">Employee Lifecycle</p>
-            </div>
-          </div>
-
-          {/* Main Headline */}
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Design. Build. Monitor.
-            <br />
-            <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-              Employee Journeys
-            </span>
-          </h2>
-
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            Create seamless onboarding, offboarding, and lifecycle experiences. 
-            Track progress in real-time and ensure no employee falls behind.
-          </p>
-
-          {/* CTA Button */}
-          <button
-            onClick={() => navigate('/workflows')}
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-2xl font-semibold text-lg shadow-xl shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 transition-all duration-300"
-          >
-            Go to Journeys
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center mb-3">
-              <GitBranch className="w-5 h-5 text-indigo-600" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{globalStats.activeJourneys}</p>
-            <p className="text-sm text-gray-500">Active Journeys</p>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center mb-3">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{globalStats.totalEmployees}</p>
-            <p className="text-sm text-gray-500">Total Employees</p>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center mb-3">
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-            </div>
-            <p className="text-3xl font-bold text-emerald-600">{globalStats.onTrack}</p>
-            <p className="text-sm text-gray-500">On Track</p>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mb-3">
-              <CheckCircle2 className="w-5 h-5 text-amber-600" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{globalStats.completionRate}%</p>
-            <p className="text-sm text-gray-500">Completion Rate</p>
-          </div>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          <div 
-            onClick={() => navigate('/workflows')}
-            className="group bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:border-red-200 transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              Build Journeys
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
-            </h3>
-            <p className="text-gray-600">
-              Create visual workflows with blocks, tasks, and conditional logic. Design onboarding, offboarding, and custom journeys.
-            </p>
-          </div>
-
-          <div 
-            onClick={() => navigate('/workflows')}
-            className="group bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-              <BarChart3 className="w-6 h-6 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              Monitor Progress
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
-            </h3>
-            <p className="text-gray-600">
-              Track every employee's journey in real-time. Identify bottlenecks, at-risk employees, and optimize your processes.
-            </p>
-          </div>
-
-          <div 
-            onClick={() => navigate('/workflows')}
-            className="group bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              Automate Tasks
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-            </h3>
-            <p className="text-gray-600">
-              Set up time-based triggers and audience rules. Automatically assign tasks based on employee attributes.
-            </p>
-          </div>
-        </div>
-
-        {/* Recent Journeys Preview */}
-        {journeys.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Your Journeys</h3>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg text-sm transition-all"
+              >
+                <Settings2 className="w-4 h-4" />
+                Settings
+              </button>
               <button
                 onClick={() => navigate('/workflows')}
-                className="text-sm text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all"
               >
-                View all <ArrowRight className="w-4 h-4" />
+                Go to Journeys
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid gap-3">
-              {journeys.slice(0, 3).map(journey => {
-                const metrics = getJourneyMetrics(journey.id);
-                return (
-                  <div 
-                    key={journey.id}
-                    onClick={() => navigate(`/journey/${journey.id}`)}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {journey.type === 'onboarding' ? '🚀' : 
-                         journey.type === 'offboarding' ? '👋' : 
-                         journey.type === 'promotion' ? '⭐' : '📋'}
-                      </span>
-                      <div>
-                        <p className="font-medium text-gray-900">{journey.name}</p>
-                        <p className="text-sm text-gray-500">{metrics.totalEmployees} employees</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-emerald-600">{metrics.onTrack} on track</p>
-                        {metrics.atRisk > 0 && (
-                          <p className="text-xs text-amber-600">{metrics.atRisk} at risk</p>
-                        )}
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-                );
-              })}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="mb-6 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-gray-500" />
+              Lifecycle Stage Configuration
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pre-boarding Duration
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={lifecycleConfig.preboardingDays}
+                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    readOnly
+                  />
+                  <span className="text-sm text-gray-500">days before start date</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Onboarding Duration
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={lifecycleConfig.onboardingDays}
+                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    readOnly
+                  />
+                  <span className="text-sm text-gray-500">days until "Active"</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-sm text-gray-400">
-            JourneyFlow Pro • Employee Lifecycle Management
+        {/* Page Title */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Employee Lifecycle</h2>
+          <p className="text-gray-500 mt-1">
+            {lifecycleData.totalEmployees} employees • {journeys.length} journeys configured
+            <span className="text-xs text-gray-400 ml-2">• Click on a stage to see employees</span>
           </p>
         </div>
+
+        {/* Horizontal Funnel */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
+          {/* Funnel Bars - Horizontal, growing upward */}
+          <div className="flex items-end justify-center gap-1 h-[380px] px-4">
+            {lifecycleStages.map((stage, index) => {
+              const count = lifecycleData.counts[stage.id as keyof typeof lifecycleData.counts];
+              const stageJourneys = lifecycleData.journeysByStage[stage.id] || [];
+              const Icon = stage.icon;
+              const barHeight = getBarHeight(count);
+              const isOnboarding = stage.id === 'onboarding';
+              const percentage = lifecycleData.totalEmployees > 0 
+                ? Math.round((count / lifecycleData.totalEmployees) * 100) 
+                : 0;
+              const isHovered = hoveredStage === stage.id;
+              const isSelected = selectedStage === stage.id;
+              const isLast = index === lifecycleStages.length - 1;
+              
+              return (
+                <div key={stage.id} className="flex items-end">
+                  {/* Bar Container */}
+                  <div 
+                    className="relative cursor-pointer group"
+                    style={{ width: '140px' }}
+                    onMouseEnter={() => setHoveredStage(stage.id)}
+                    onMouseLeave={() => setHoveredStage(null)}
+                    onClick={() => {
+                      setSelectedStage(stage.id);
+                      setEmployeeSearch('');
+                    }}
+                  >
+                    {/* The growing bar */}
+                    <div 
+                      className={cn(
+                        "w-full rounded-t-2xl bg-gradient-to-t relative overflow-hidden transition-all duration-500",
+                        stage.gradient,
+                        (isHovered || isSelected) && "shadow-xl scale-105 z-10",
+                        isSelected && "ring-4 ring-white ring-offset-2"
+                      )}
+                      style={{ 
+                        height: `${barHeight * 2.6}px`,
+                        minHeight: '140px'
+                      }}
+                    >
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-white/20" />
+                      
+                      {/* Content inside bar */}
+                      <div className="absolute inset-0 flex flex-col justify-between p-3 text-white">
+                        {/* Top: Count */}
+                        <div className="text-center">
+                          <div className="text-3xl font-bold">{count}</div>
+                          <div className="text-[11px] opacity-80">{percentage}% of total</div>
+                        </div>
+                        
+                        {/* Middle: Status badges for onboarding */}
+                        {isOnboarding && (lifecycleData.onboardingMetrics.atRisk > 0 || lifecycleData.onboardingMetrics.delayed > 0) && (
+                          <div className="flex flex-col gap-1 items-center">
+                            {lifecycleData.onboardingMetrics.delayed > 0 && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/40 backdrop-blur-sm rounded text-[10px]">
+                                <Clock className="w-3 h-3" />
+                                {lifecycleData.onboardingMetrics.delayed} delayed
+                              </span>
+                            )}
+                            {lifecycleData.onboardingMetrics.atRisk > 0 && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded text-[10px]">
+                                <AlertTriangle className="w-3 h-3" />
+                                {lifecycleData.onboardingMetrics.atRisk} at risk
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Bottom: Avg time & Journeys */}
+                        <div className="text-center space-y-1">
+                          {stage.avgDays && (
+                            <div className="flex items-center justify-center gap-1 text-[10px] opacity-70">
+                              <Timer className="w-3 h-3" />
+                              <span>~{stage.avgDays}d avg</span>
+                            </div>
+                          )}
+                          {stageJourneys.length > 0 ? (
+                            <div className="flex items-center justify-center gap-1 text-[10px] opacity-90">
+                              <GitBranch className="w-3 h-3" />
+                              <span>{stageJourneys.length} journey{stageJourneys.length > 1 ? 's' : ''}</span>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] opacity-60">No journeys</div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Click indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                        <div className="bg-white/90 rounded-full px-3 py-1.5 text-xs font-medium text-gray-700 shadow-lg">
+                          <Users className="w-3 h-3 inline mr-1" />
+                          View employees
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Label below bar */}
+                    <div className="mt-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <div className={cn(
+                          "w-6 h-6 rounded-lg bg-gradient-to-br flex items-center justify-center",
+                          stage.gradient
+                        )}>
+                          <Icon className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <span className="font-semibold text-sm text-gray-700">{stage.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Flow Arrow between stages */}
+                  {!isLast && (
+                    <div className="flex items-center justify-center w-8 h-full pb-16">
+                      <div className="flex flex-col items-center gap-1 text-gray-300">
+                        <ChevronRight className="w-5 h-5" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Flow description */}
+          <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-center">
+            <div className="flex items-center gap-6 text-xs text-gray-400">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-violet-500 to-purple-600" />
+                <span>Candidates enter</span>
+              </div>
+              <ChevronRight className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-amber-500 to-orange-500" />
+                <span>Become active employees</span>
+              </div>
+              <ChevronRight className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-rose-500 to-red-500" />
+                <span>Eventually leave</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cross-Lifecycle Processes */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            Cross-Lifecycle Processes
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Promotions */}
+            <div 
+              className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-amber-200 transition-all cursor-pointer group"
+              onClick={() => {
+                if (lifecycleData.promotionJourneys.length > 0) {
+                  navigate(`/journey/${lifecycleData.promotionJourneys[0].id}`);
+                } else {
+                  navigate('/workflows');
+                }
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Star className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Promotions</h3>
+                    <p className="text-xs text-gray-500">
+                      {lifecycleData.promotionJourneys.length > 0 
+                        ? `${lifecycleData.promotionJourneys.length} journey${lifecycleData.promotionJourneys.length > 1 ? 's' : ''}`
+                        : 'No journeys configured'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {lifecycleData.promotionJourneys.reduce((acc, j) => acc + getJourneyMetrics(j.id).totalEmployees, 0) || '—'}
+                  </p>
+                  <p className="text-xs text-gray-500">in process</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Changes */}
+            <div 
+              className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
+              onClick={() => {
+                if (lifecycleData.roleChangeJourneys.length > 0) {
+                  navigate(`/journey/${lifecycleData.roleChangeJourneys[0].id}`);
+                } else {
+                  navigate('/workflows');
+                }
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <ArrowLeftRight className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Role Changes</h3>
+                    <p className="text-xs text-gray-500">
+                      {lifecycleData.roleChangeJourneys.length > 0 
+                        ? `${lifecycleData.roleChangeJourneys.length} journey${lifecycleData.roleChangeJourneys.length > 1 ? 's' : ''}`
+                        : 'No journeys configured'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {lifecycleData.roleChangeJourneys.reduce((acc, j) => acc + getJourneyMetrics(j.id).totalEmployees, 0) || '—'}
+                  </p>
+                  <p className="text-xs text-gray-500">in process</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-3 gap-6">
+          {/* Alerts */}
+          <div className="col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Needs Attention
+            </h3>
+            <div className="space-y-3">
+              {lifecycleData.onboardingMetrics.delayed > 0 && (
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-red-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Delayed Onboarding</p>
+                      <p className="text-xs text-gray-500">{lifecycleData.onboardingMetrics.delayed} employees past SLA</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); navigate('/workflows'); }}
+                    className="text-xs text-red-600 font-medium hover:underline"
+                  >
+                    Review →
+                  </button>
+                </div>
+              )}
+              {lifecycleData.onboardingMetrics.atRisk > 0 && (
+                <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">At Risk</p>
+                      <p className="text-xs text-gray-500">{lifecycleData.onboardingMetrics.atRisk} approaching deadline</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); navigate('/workflows'); }}
+                    className="text-xs text-amber-600 font-medium hover:underline"
+                  >
+                    Review →
+                  </button>
+                </div>
+              )}
+              {lifecycleData.onboardingMetrics.delayed === 0 && lifecycleData.onboardingMetrics.atRisk === 0 && (
+                <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-700">All Clear!</p>
+                    <p className="text-xs text-emerald-600">Everyone is on track</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Overview</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-gray-500">Onboarding Success</span>
+                  <span className="font-bold text-emerald-600">
+                    {lifecycleData.counts.onboarding > 0 
+                      ? Math.round((lifecycleData.onboardingMetrics.onTrack / lifecycleData.counts.onboarding) * 100) 
+                      : 100}%
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                    style={{ 
+                      width: `${lifecycleData.counts.onboarding > 0 
+                        ? (lifecycleData.onboardingMetrics.onTrack / lifecycleData.counts.onboarding) * 100 
+                        : 100}%` 
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Total Journeys</span>
+                  <span className="font-semibold">{journeys.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Active Journeys</span>
+                  <span className="font-semibold text-emerald-600">
+                    {journeys.filter(j => j.status === 'active').length}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/workflows')}
+                className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all"
+              >
+                Manage Journeys
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Employee List Side Panel */}
+      <Sheet open={!!selectedStage} onOpenChange={(open) => !open && setSelectedStage(null)}>
+        <SheetContent className="w-[480px] sm:max-w-[480px] p-0 flex flex-col">
+          {selectedStageInfo && (
+            <>
+              {/* Header */}
+              <SheetHeader className={cn(
+                "p-6 bg-gradient-to-r text-white",
+                selectedStageInfo.gradient
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                      <selectedStageInfo.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <SheetTitle className="text-white text-xl">{selectedStageInfo.name}</SheetTitle>
+                      <p className="text-white/80 text-sm">
+                        {lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]} employees
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              {/* Search */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search employees..."
+                    value={employeeSearch}
+                    onChange={(e) => setEmployeeSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Employee List */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {selectedStageEmployees.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedStageEmployees.map(employee => {
+                      // Find their progress if any
+                      const progress = employeeProgress.find(p => p.employeeId === employee.id);
+                      const journey = progress ? journeys.find(j => j.id === progress.journeyId) : null;
+                      
+                      return (
+                        <div
+                          key={employee.id}
+                          className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                          onClick={() => {
+                            if (journey) {
+                              navigate(`/journey/${journey.id}`);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Avatar */}
+                            <div className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br",
+                              selectedStageInfo.gradient
+                            )}>
+                              {employee.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                            </div>
+                            
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{employee.name}</p>
+                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                <span className="flex items-center gap-1">
+                                  <Building2 className="w-3 h-3" />
+                                  {employee.department}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {employee.location}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                                <Mail className="w-3 h-3" />
+                                {employee.email}
+                              </div>
+                              
+                              {/* Journey info if available */}
+                              {journey && progress && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <div className="flex items-center gap-2">
+                                    <GitBranch className="w-3 h-3 text-gray-400" />
+                                    <span className="text-xs text-gray-600">{journey.name}</span>
+                                    <span className={cn(
+                                      "text-[10px] px-1.5 py-0.5 rounded",
+                                      progress.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                                      progress.status === 'at_risk' ? 'bg-amber-100 text-amber-700' :
+                                      progress.status === 'delayed' ? 'bg-red-100 text-red-700' :
+                                      'bg-blue-100 text-blue-700'
+                                    )}>
+                                      {progress.status.replace('_', ' ')}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Arrow */}
+                            {journey && (
+                              <ExternalLink className="w-4 h-4 text-gray-300" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <Users className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm">
+                      {employeeSearch ? 'No employees match your search' : 'No employees in this stage'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer with journeys */}
+              {lifecycleData.journeysByStage[selectedStage]?.length > 0 && (
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Related Journeys</p>
+                  <div className="flex flex-wrap gap-2">
+                    {lifecycleData.journeysByStage[selectedStage].map(journey => (
+                      <button
+                        key={journey.id}
+                        onClick={() => navigate(`/journey/${journey.id}`)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <GitBranch className="w-3 h-3" />
+                        {journey.name}
+                        <ExternalLink className="w-3 h-3 text-gray-400" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
