@@ -1,5 +1,19 @@
-import { Block } from '@/types/journey';
 import { Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, FileText, CheckSquare, Bell, Layers } from 'lucide-react';
+
+export interface TemplateRule {
+  id: string;
+  label: string;
+  condition: {
+    attribute: string;
+    operator: string;
+    value: string;
+  };
+  action: {
+    type: 'add_task' | 'add_block';
+    addedTasks?: { title: string; type: string }[];
+    addedBlockTemplateId?: string;
+  };
+}
 
 export interface BlockTemplate {
   id: string;
@@ -13,6 +27,7 @@ export interface BlockTemplate {
     type: 'basic' | 'data_input' | 'signature' | 'review' | 'notification';
     assigneeType: string;
   }[];
+  rules?: TemplateRule[];
 }
 
 export const blockTemplates: BlockTemplate[] = [
@@ -40,6 +55,17 @@ export const blockTemplates: BlockTemplate[] = [
     suggestedTasks: [
       { title: 'Sign NDA agreement', type: 'signature', assigneeType: 'employee' },
       { title: 'Confidentiality training', type: 'review', assigneeType: 'employee' },
+    ],
+    rules: [
+      {
+        id: 'rule-nda-contractor',
+        label: 'Contractor NDA extras',
+        condition: { attribute: 'employeeType', operator: 'equals', value: 'Contractor' },
+        action: { 
+          type: 'add_block', 
+          addedBlockTemplateId: 'template-compliance-training' 
+        },
+      },
     ],
   },
   

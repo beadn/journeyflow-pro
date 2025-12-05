@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { Journey, Block, Task, BlockRule } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, User, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users } from 'lucide-react';
+import { Eye, User, MapPin, Building2, Briefcase, CheckCircle2, Clock, Users, ArrowDown, GitBranch, Sparkles, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { blockTemplates } from '@/lib/blockTemplates';
 
 interface JourneyPreviewModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface EmployeeConditions {
   department: string;
   location: string;
   role: string;
+  employeeType: string;
   legalEntity: string;
   manager: string;
 }
@@ -22,6 +24,18 @@ interface EmployeeConditions {
 interface PreviewTask extends Partial<Task> {
   isConditional?: boolean;
   ruleLabel?: string;
+}
+
+interface PreviewBlock {
+  block: Block | { id: string; name: string; category?: string; isSubBlock: true; parentBlockName: string };
+  period: { id: string; label: string; offsetDays: number } | undefined;
+  baseTasks: Task[] | { title: string; type: string }[];
+  conditionalTasks: PreviewTask[];
+  skippedBlock: { skip: boolean; reason: string };
+  totalTasks: number;
+  dependencies: string[];
+  isSubBlock?: boolean;
+  parentBlockName?: string;
 }
 
 export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreviewModalProps) {
@@ -32,6 +46,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
     department: '',
     location: '',
     role: '',
+    employeeType: '',
     legalEntity: '',
     manager: '',
   });
@@ -59,54 +74,134 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
     }
   };
 
+  // Topological sort to respect dependencies
+  const sortBlocksByDependencies = (blocksToSort: Block[]): Block[] => {
+    const sorted: Block[] = [];
+    const visited = new Set<string>();
+    const blockMap = new Map(blocksToSort.map(b => [b.id, b]));
+    
+    const visit = (block: Block) => {
+      if (visited.has(block.id)) return;
+      visited.add(block.id);
+      
+      // Visit dependencies first
+      block.dependencyBlockIds.forEach(depId => {
+        const dep = blockMap.get(depId);
+        if (dep) visit(dep);
+      });
+      
+      sorted.push(block);
+    };
+    
+    // Sort by period first, then apply topological sort
+    const byPeriod = [...blocksToSort].sort((a, b) => {
+      const periodA = journey.periods.find(p => p.id === a.periodId);
+      const periodB = journey.periods.find(p => p.id === b.periodId);
+      return (periodA?.offsetDays || 0) - (periodB?.offsetDays || 0);
+    });
+    
+    byPeriod.forEach(block => visit(block));
+    
+    return sorted;
+  };
+
   // Calculate which tasks would execute based on conditions
   const previewData = useMemo(() => {
-    return blocks
-      .sort((a, b) => {
-        const periodA = journey.periods.find(p => p.id === a.periodId);
-        const periodB = journey.periods.find(p => p.id === b.periodId);
-        return (periodA?.order || 0) - (periodB?.order || 0);
-      })
-      .map(block => {
-        const baseTasks = getTasksByBlockId(block.id);
-        const conditionalTasks: PreviewTask[] = [];
-        const skippedBlock = { skip: false, reason: '' };
+    const sortedBlocks = sortBlocksByDependencies(blocks);
+    const result: PreviewBlock[] = [];
+    
+    sortedBlocks.forEach(block => {
+      const baseTasks = getTasksByBlockId(block.id);
+      const conditionalTasks: PreviewTask[] = [];
+      const skippedBlock = { skip: false, reason: '' };
+      const subBlocksToAdd: { template: typeof blockTemplates[0]; ruleLabel: string }[] = [];
 
-        // Evaluate each rule
-        block.rules.forEach(rule => {
-          const conditionMet = evaluateCondition(rule, conditions);
-          
-          if (conditionMet) {
-            if (rule.action.type === 'skip_block') {
-              skippedBlock.skip = true;
-              skippedBlock.reason = rule.label;
-            } else if (rule.action.type === 'add_task') {
-              // Support both old and new format
-              const tasksToAdd = rule.action.addedTasks || (rule.action.addedTask ? [rule.action.addedTask] : []);
-              tasksToAdd.forEach(task => {
-                conditionalTasks.push({
-                  ...task,
-                  isConditional: true,
-                  ruleLabel: rule.label,
-                });
+      // Evaluate each rule
+      block.rules.forEach(rule => {
+        const conditionMet = evaluateCondition(rule, conditions);
+        
+        if (conditionMet) {
+          if (rule.action.type === 'skip_block') {
+            skippedBlock.skip = true;
+            skippedBlock.reason = rule.label;
+          } else if (rule.action.type === 'add_task') {
+            const tasksToAdd = rule.action.addedTasks || (rule.action.addedTask ? [rule.action.addedTask] : []);
+            tasksToAdd.forEach(task => {
+              conditionalTasks.push({
+                ...task,
+                isConditional: true,
+                ruleLabel: rule.label,
               });
+            });
+          } else if (rule.action.type === 'add_block' && rule.action.addedBlockTemplateId) {
+            const template = blockTemplates.find(t => t.id === rule.action.addedBlockTemplateId);
+            if (template) {
+              subBlocksToAdd.push({ template, ruleLabel: rule.label });
             }
+          }
+        }
+      });
+
+      // Get dependency names for display
+      const dependencyNames = block.dependencyBlockIds
+        .map(depId => blocks.find(b => b.id === depId)?.name || depId)
+        .filter(Boolean);
+
+      result.push({
+        block,
+        period: journey.periods.find(p => p.id === block.periodId),
+        baseTasks,
+        conditionalTasks,
+        skippedBlock,
+        totalTasks: skippedBlock.skip ? 0 : baseTasks.length + conditionalTasks.length,
+        dependencies: dependencyNames,
+      });
+
+      // Add sub-blocks that were triggered by rules
+      subBlocksToAdd.forEach(({ template, ruleLabel }) => {
+        const subBlockTasks: PreviewTask[] = [];
+        
+        // Check if the sub-block template has rules that match
+        template.rules?.forEach(subRule => {
+          const subConditionMet = evaluateCondition(subRule as BlockRule, conditions);
+          if (subConditionMet && subRule.action.type === 'add_task') {
+            const tasksToAdd = subRule.action.addedTasks || (subRule.action.addedTask ? [subRule.action.addedTask] : []);
+            tasksToAdd.forEach(task => {
+              subBlockTasks.push({
+                ...task,
+                isConditional: true,
+                ruleLabel: subRule.label,
+              });
+            });
           }
         });
 
-        return {
-          block,
+        result.push({
+          block: {
+            id: `sub-${template.id}-${block.id}`,
+            name: template.name,
+            category: template.category,
+            isSubBlock: true,
+            parentBlockName: block.name,
+          },
           period: journey.periods.find(p => p.id === block.periodId),
-          baseTasks,
-          conditionalTasks,
-          skippedBlock,
-          totalTasks: skippedBlock.skip ? 0 : baseTasks.length + conditionalTasks.length,
-        };
+          baseTasks: template.suggestedTasks || [],
+          conditionalTasks: subBlockTasks,
+          skippedBlock: { skip: false, reason: '' },
+          totalTasks: (template.suggestedTasks?.length || 0) + subBlockTasks.length,
+          dependencies: [block.name],
+          isSubBlock: true,
+          parentBlockName: block.name,
+        });
       });
+    });
+    
+    return result;
   }, [blocks, conditions, journey.periods, getTasksByBlockId]);
 
   const totalTaskCount = previewData.reduce((sum, p) => sum + p.totalTasks, 0);
   const activeBlocks = previewData.filter(p => !p.skippedBlock.skip).length;
+  const subBlockCount = previewData.filter(p => p.isSubBlock).length;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -127,7 +222,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
 
         <div className="flex-1 overflow-hidden flex">
           {/* Conditions Panel */}
-          <div className="w-80 border-r border-border p-4 space-y-4 bg-muted/30">
+          <div className="w-80 border-r border-border p-4 space-y-4 bg-muted/30 overflow-y-auto">
             <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
               <User className="w-4 h-4" />
               Condiciones del empleado
@@ -145,13 +240,13 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Seleccionar...</option>
-                  <option value="engineering">Engineering</option>
-                  <option value="sales">Sales</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="hr">HR</option>
-                  <option value="finance">Finance</option>
-                  <option value="legal">Legal</option>
-                  <option value="operations">Operations</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Legal">Legal</option>
+                  <option value="Operations">Operations</option>
                 </select>
               </div>
 
@@ -166,11 +261,29 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Seleccionar...</option>
-                  <option value="madrid">Madrid</option>
-                  <option value="barcelona">Barcelona</option>
-                  <option value="new_york">New York</option>
-                  <option value="london">London</option>
-                  <option value="remote">Remote</option>
+                  <option value="Madrid">Madrid</option>
+                  <option value="Barcelona">Barcelona</option>
+                  <option value="New York">New York</option>
+                  <option value="London">London</option>
+                  <option value="Remote">Remote</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                  <Briefcase className="w-3 h-3 inline mr-1" />
+                  Tipo de empleado
+                </label>
+                <select
+                  value={conditions.employeeType}
+                  onChange={(e) => setConditions({ ...conditions, employeeType: e.target.value })}
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contractor">Contractor</option>
+                  <option value="Intern">Intern</option>
                 </select>
               </div>
 
@@ -199,10 +312,10 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Seleccionar...</option>
-                  <option value="spain">Spain S.L.</option>
-                  <option value="usa">USA Inc.</option>
-                  <option value="uk">UK Ltd.</option>
-                  <option value="germany">Germany GmbH</option>
+                  <option value="Spain S.L.">Spain S.L.</option>
+                  <option value="USA Inc.">USA Inc.</option>
+                  <option value="UK Ltd.">UK Ltd.</option>
+                  <option value="Germany GmbH">Germany GmbH</option>
                 </select>
               </div>
 
@@ -227,6 +340,12 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                 <h4 className="text-xs font-semibold text-primary mb-2">Resumen</h4>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p><span className="font-medium text-foreground">{activeBlocks}</span> bloques activos</p>
+                  {subBlockCount > 0 && (
+                    <p className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-purple-500" />
+                      <span className="font-medium text-purple-600">{subBlockCount}</span> sub-bloques condicionales
+                    </p>
+                  )}
                   <p><span className="font-medium text-foreground">{totalTaskCount}</span> tareas totales</p>
                 </div>
               </div>
@@ -234,69 +353,106 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
           </div>
 
           {/* Preview Results */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {previewData.map(({ block, period, baseTasks, conditionalTasks, skippedBlock }) => (
-              <div
-                key={block.id}
-                className={cn(
-                  "rounded-lg border transition-all",
-                  skippedBlock.skip
-                    ? "border-dashed border-muted-foreground/30 bg-muted/20 opacity-60"
-                    : "border-border bg-background"
-                )}
-              >
-                {/* Block Header */}
-                <div className="p-3 border-b border-border flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      skippedBlock.skip ? "bg-muted-foreground" : "bg-primary"
-                    )} />
-                    <div>
-                      <h4 className="font-medium text-sm">{block.name}</h4>
-                      <p className="text-xs text-muted-foreground">{period?.label}</p>
-                    </div>
-                  </div>
-                  {skippedBlock.skip ? (
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                      Omitido: {skippedBlock.reason}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {baseTasks.length + conditionalTasks.length} tareas
-                    </span>
-                  )}
-                </div>
-
-                {/* Tasks */}
-                {!skippedBlock.skip && (
-                  <div className="p-3 space-y-2">
-                    {baseTasks.map(task => (
-                      <div key={task.id} className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                        <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
-                        <span className="flex-1 text-sm">{task.title}</span>
-                        <span className="text-xs text-muted-foreground capitalize">{task.assigneeType}</span>
-                      </div>
-                    ))}
-                    
-                    {conditionalTasks.map((task, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded bg-accent/10 border border-accent/20">
-                        <CheckCircle2 className="w-4 h-4 text-accent" />
-                        <span className="flex-1 text-sm">{task.title}</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-accent/20 text-accent">
-                          Condicional
-                        </span>
-                        <span className="text-xs text-muted-foreground capitalize">{task.assigneeType}</span>
-                      </div>
-                    ))}
-
-                    {baseTasks.length === 0 && conditionalTasks.length === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-2">Sin tareas</p>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {previewData.map(({ block, period, baseTasks, conditionalTasks, skippedBlock, dependencies, isSubBlock, parentBlockName }, index) => (
+              <div key={block.id}>
+                {/* Dependency arrow */}
+                {index > 0 && dependencies.length > 0 && (
+                  <div className="flex items-center justify-center py-1 text-xs text-muted-foreground">
+                    <ArrowDown className="w-4 h-4" />
+                    {!isSubBlock && dependencies.length > 0 && (
+                      <span className="ml-1">depende de: {dependencies.join(', ')}</span>
                     )}
                   </div>
                 )}
+                
+                <div
+                  className={cn(
+                    "rounded-lg border transition-all",
+                    skippedBlock.skip
+                      ? "border-dashed border-muted-foreground/30 bg-muted/20 opacity-60"
+                      : isSubBlock
+                        ? "border-purple-200 bg-purple-50/50"
+                        : "border-border bg-background"
+                  )}
+                >
+                  {/* Block Header */}
+                  <div className="p-3 border-b border-border/50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        skippedBlock.skip ? "bg-muted-foreground" : isSubBlock ? "bg-purple-500" : "bg-primary"
+                      )} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {isSubBlock && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700">
+                              <Sparkles className="w-3 h-3" />
+                              Sub-bloque
+                            </span>
+                          )}
+                          <h4 className="font-medium text-sm">{block.name}</h4>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Timer className="w-3 h-3" />
+                            {period?.label}
+                          </span>
+                          {isSubBlock && parentBlockName && (
+                            <span className="text-purple-600">← desde {parentBlockName}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {skippedBlock.skip ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                        Omitido: {skippedBlock.reason}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {baseTasks.length + conditionalTasks.length} tareas
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tasks */}
+                  {!skippedBlock.skip && (
+                    <div className="p-3 space-y-2">
+                      {baseTasks.map((task, idx) => (
+                        <div key={'id' in task ? task.id : idx} className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                          <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="flex-1 text-sm">{task.title}</span>
+                          {'assigneeType' in task && (
+                            <span className="text-xs text-muted-foreground capitalize">{task.assigneeType}</span>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {conditionalTasks.map((task, idx) => (
+                        <div key={idx} className="flex items-center gap-2 p-2 rounded bg-cyan-50 border border-cyan-200">
+                          <GitBranch className="w-4 h-4 text-cyan-600" />
+                          <span className="flex-1 text-sm">{task.title}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-700">
+                            Condicional
+                          </span>
+                        </div>
+                      ))}
+
+                      {baseTasks.length === 0 && conditionalTasks.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-2">Sin tareas</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
+
+            {previewData.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No hay bloques en este journey</p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
