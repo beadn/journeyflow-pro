@@ -167,7 +167,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
@@ -186,24 +186,24 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Buscar empleados..."
+              placeholder="Search employees..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
-          <span className="text-sm text-muted-foreground">{filteredProgress.length} empleados</span>
+          <span className="text-sm text-muted-foreground">{filteredProgress.length} employees</span>
         </div>
 
         <div className="factorial-card overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Empleado</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Employee</th>
                 <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Journey</th>
-                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Bloque actual</th>
-                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Progreso</th>
-                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Estado</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Current block</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Progress</th>
+                <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -264,10 +264,10 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                         "px-3 py-1.5 rounded-full text-xs font-medium capitalize border",
                         getStatusColor(progress.status)
                       )}>
-                        {progress.status === 'on_track' ? 'En tiempo' :
-                         progress.status === 'at_risk' ? 'En riesgo' :
-                         progress.status === 'delayed' ? 'Retrasado' :
-                         progress.status === 'completed' ? 'Completado' : progress.status}
+                        {progress.status === 'on_track' ? 'On track' :
+                         progress.status === 'at_risk' ? 'At risk' :
+                         progress.status === 'delayed' ? 'Delayed' :
+                         progress.status === 'completed' ? 'Completed' : progress.status}
                       </span>
                     </td>
                   </tr>
@@ -279,7 +279,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
+            <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="btn-secondary p-2 disabled:opacity-50">
                 <ChevronLeft className="w-4 h-4" />
@@ -346,10 +346,10 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                 "px-3 py-1 rounded-full text-xs font-medium capitalize border",
                 getStatusColor(selectedProgress.status)
               )}>
-                {selectedProgress.status === 'on_track' ? 'En tiempo' :
-                 selectedProgress.status === 'at_risk' ? 'En riesgo' :
-                 selectedProgress.status === 'delayed' ? 'Retrasado' :
-                 selectedProgress.status === 'completed' ? 'Completado' : selectedProgress.status}
+                {selectedProgress.status === 'on_track' ? 'On track' :
+                 selectedProgress.status === 'at_risk' ? 'At risk' :
+                 selectedProgress.status === 'delayed' ? 'Delayed' :
+                 selectedProgress.status === 'completed' ? 'Completed' : selectedProgress.status}
               </span>
             </div>
             
@@ -359,19 +359,19 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                 <div className="text-2xl font-bold text-emerald-600">
                   {selectedProgress.completedBlockIds.length}
                 </div>
-                <div className="text-xs text-emerald-600/70">Completados</div>
+                <div className="text-xs text-emerald-600/70">Completed</div>
               </div>
               <div className="bg-blue-50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-blue-600">
                   {selectedProgress.blockProgress.filter(bp => bp.status === 'in_progress').length}
                 </div>
-                <div className="text-xs text-blue-600/70">En progreso</div>
+                <div className="text-xs text-blue-600/70">In progress</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-gray-600">
                   {selectedProgress.blockProgress.filter(bp => bp.status === 'pending').length}
                 </div>
-                <div className="text-xs text-gray-600/70">Pendientes</div>
+                <div className="text-xs text-gray-600/70">Pending</div>
               </div>
             </div>
 
@@ -385,8 +385,8 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
               />
             </div>
             <div className="flex justify-between mt-1 text-xs text-gray-500">
-              <span>Inicio: {formatDate(selectedProgress.startedAt)}</span>
-              <span>{Math.round((selectedProgress.completedBlockIds.length / journeyBlocks.length) * 100)}% completado</span>
+              <span>Started: {formatDate(selectedProgress.startedAt)}</span>
+              <span>{Math.round((selectedProgress.completedBlockIds.length / journeyBlocks.length) * 100)}% complete</span>
             </div>
           </div>
 
@@ -455,7 +455,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                               ? "bg-blue-200 text-blue-700"
                               : "bg-gray-200 text-gray-600"
                           )}>
-                            Día {period.offsetDays}
+                            Day {period.offsetDays}
                           </span>
                         </div>
                         
@@ -473,7 +473,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                             />
                           </div>
                           <span className="text-xs text-gray-500">
-                            {periodProgress.completed}/{periodProgress.total} bloques
+                            {periodProgress.completed}/{periodProgress.total} blocks
                           </span>
                         </div>
                       </div>
@@ -481,13 +481,13 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                       {/* Period Status Badge */}
                       {periodStatus === 'completed' && (
                         <span className="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-                          ✓ Completado
+                          ✓ Complete
                         </span>
                       )}
                       {periodStatus === 'in_progress' && (
                         <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full flex items-center gap-1">
                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                          En curso
+                          In progress
                         </span>
                       )}
                     </div>
@@ -548,7 +548,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                                   {(blockProgress?.startedAt || blockProgress?.completedAt) && (
                                     <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                                       {blockProgress.startedAt && (
-                                        <span>Inicio: {formatDate(blockProgress.startedAt)}</span>
+                                        <span>Started: {formatDate(blockProgress.startedAt)}</span>
                                       )}
                                       {blockProgress.completedAt && (
                                         <span className="text-emerald-600">
@@ -564,7 +564,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                               {isExpanded && blockTasks.length > 0 && (
                                 <div className="mt-3 pt-3 border-t border-gray-200/50">
                                   <h6 className="text-xs font-medium text-gray-500 uppercase mb-2">
-                                    Tareas ({blockTasks.length})
+                                    Tasks ({blockTasks.length})
                                   </h6>
                                   <div className="space-y-1.5">
                                     {blockTasks.map((task, taskIndex) => {
@@ -609,7 +609,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                               {/* Expanded: No tasks message */}
                               {isExpanded && blockTasks.length === 0 && (
                                 <div className="mt-3 pt-3 border-t border-gray-200/50 text-center text-xs text-gray-400">
-                                  No hay tareas en este bloque
+                                  No tasks in this block
                                 </div>
                               )}
                             </div>
@@ -627,7 +627,7 @@ export function MonitorByEmployee({ journeyId }: MonitorByEmployeeProps) {
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                     <Flag className="w-4 h-4 text-gray-400" />
                   </div>
-                  <span className="text-sm text-gray-400">Fin del Journey</span>
+                  <span className="text-sm text-gray-400">Journey End</span>
                 </div>
               )}
             </div>

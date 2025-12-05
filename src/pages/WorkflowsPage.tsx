@@ -71,10 +71,10 @@ export default function WorkflowsPage() {
   const getAttributeLabel = (attr: string) => {
     const labels: Record<string, string> = {
       department: 'Dept',
-      location: 'Ubicación',
-      employeeType: 'Tipo',
-      contractType: 'Contrato',
-      level: 'Nivel',
+      location: 'Location',
+      employeeType: 'Type',
+      contractType: 'Contract',
+      level: 'Level',
     };
     return labels[attr] || attr;
   };
@@ -95,15 +95,15 @@ export default function WorkflowsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Workflows</h1>
-            <p className="text-gray-500 mt-1">Gestiona el ciclo de vida de tus empleados</p>
+            <h1 className="text-3xl font-bold text-gray-900">Journeys</h1>
+            <p className="text-gray-500 mt-1">Manage your employee lifecycle journeys</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
           >
             <Plus className="w-5 h-5" />
-            Nuevo Workflow
+            New Journey
           </button>
         </div>
 
@@ -112,7 +112,7 @@ export default function WorkflowsPage() {
           <div className="mb-8 bg-gradient-to-r from-amber-50 to-red-50 rounded-xl border border-amber-200 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Zap className="w-5 h-5 text-amber-600" />
-              <h2 className="font-semibold text-gray-900">Requiere atención</h2>
+              <h2 className="font-semibold text-gray-900">Needs Attention</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {journeysNeedingAttention.map(({ journey, metrics }) => (
@@ -130,13 +130,13 @@ export default function WorkflowsPage() {
                     {metrics.delayed > 0 && (
                       <span className="text-red-600 flex items-center gap-1">
                         <Flame className="w-3 h-3" />
-                        {metrics.delayed} retrasados
+                        {metrics.delayed} delayed
                       </span>
                     )}
                     {metrics.atRisk > 0 && (
                       <span className="text-amber-600 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        {metrics.atRisk} en riesgo
+                        {metrics.atRisk} at risk
                       </span>
                     )}
                   </div>
@@ -148,15 +148,15 @@ export default function WorkflowsPage() {
 
         {/* Filter & Workflows Section */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Tus Workflows</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Your Journeys</h2>
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-400" />
             <div className="flex items-center bg-white rounded-lg border border-gray-200 p-0.5">
               {[
-                { id: 'all' as const, label: 'Todos' },
-                { id: 'active' as const, label: 'Activos' },
-                { id: 'draft' as const, label: 'Borrador' },
-                { id: 'archived' as const, label: 'Archivados' },
+                { id: 'all' as const, label: 'All' },
+                { id: 'active' as const, label: 'Active' },
+                { id: 'draft' as const, label: 'Draft' },
+                { id: 'archived' as const, label: 'Archived' },
               ].map(filter => (
                 <button
                   key={filter.id}
@@ -208,8 +208,8 @@ export default function WorkflowsPage() {
                       "px-2.5 py-1 rounded-full text-xs font-medium border",
                       getStatusColor(journey.status)
                     )}>
-                      {journey.status === 'active' ? 'Activo' : 
-                       journey.status === 'draft' ? 'Borrador' : 'Archivado'}
+                      {journey.status === 'active' ? 'Active' : 
+                       journey.status === 'draft' ? 'Draft' : 'Archived'}
                     </span>
                   </div>
                   
@@ -244,7 +244,7 @@ export default function WorkflowsPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <BarChart3 className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{journey.periods.length} periodos</span>
+                      <span className="text-gray-600">{journey.periods.length} periods</span>
                     </div>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function WorkflowsPage() {
 
                 {/* Hover CTA */}
                 <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-sm text-gray-500">Ver detalles</span>
+                  <span className="text-sm text-gray-500">View details</span>
                   <ArrowRight className="w-4 h-4 text-indigo-600" />
                 </div>
               </div>
@@ -323,9 +323,9 @@ export default function WorkflowsPage() {
             <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Plus className="w-7 h-7 text-indigo-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">Crear nuevo workflow</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">Create new journey</h3>
             <p className="text-sm text-gray-500 text-center max-w-[200px]">
-              Onboarding, offboarding, promociones o journeys personalizados
+              Onboarding, offboarding, promotions or custom journeys
             </p>
           </div>
         </div>
@@ -336,8 +336,8 @@ export default function WorkflowsPage() {
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <Filter className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="font-medium text-gray-900 mb-1">No hay workflows con este filtro</h3>
-            <p className="text-sm text-gray-500">Prueba cambiando el filtro de estado</p>
+            <h3 className="font-medium text-gray-900 mb-1">No journeys match this filter</h3>
+            <p className="text-sm text-gray-500">Try changing the status filter</p>
           </div>
         )}
       </div>

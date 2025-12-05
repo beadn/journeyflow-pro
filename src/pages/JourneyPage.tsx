@@ -184,7 +184,7 @@ export default function JourneyPage() {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                   <Settings className="w-4 h-4 mr-2" />
-                  Configuración
+                  Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDuplicate}>
                   <Copy className="w-4 h-4 mr-2" />

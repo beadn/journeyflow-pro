@@ -134,15 +134,15 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar bloque</AlertDialogTitle>
+              <AlertDialogTitle>Delete Block</AlertDialogTitle>
               <AlertDialogDescription>
-                ¿Seguro que quieres eliminar "{block.name}"? Se eliminarán también las {tasks.length} tareas de este bloque.
+                Are you sure you want to delete "{block.name}"? This will also delete the {tasks.length} tasks in this block.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Eliminar
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -176,7 +176,7 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
               ))}
               {tasks.length > 2 && (
                 <p className="text-[10px] text-muted-foreground pl-4">
-                  +{tasks.length - 2} tareas más
+                  +{tasks.length - 2} more tasks
                 </p>
               )}
             </div>
@@ -184,11 +184,11 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
 
           {/* Footer stats */}
           <div className="flex items-center gap-3 pt-3 border-t border-border text-xs">
-            <span className="font-semibold text-foreground">{tasks.length} tareas</span>
+            <span className="font-semibold text-foreground">{tasks.length} tasks</span>
             {block.rules.length > 0 && (
               <span className="flex items-center gap-1 text-primary font-medium">
                 <GitBranch className="w-3 h-3" />
-                {block.rules.length} reglas
+                {block.rules.length} rules
               </span>
             )}
             {block.expectedDurationDays && (

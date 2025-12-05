@@ -182,10 +182,10 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'on_track': return 'En tiempo';
-      case 'at_risk': return 'En riesgo';
-      case 'delayed': return 'Retrasado';
-      case 'completed': return 'Completado';
+      case 'on_track': return 'On track';
+      case 'at_risk': return 'At risk';
+      case 'delayed': return 'Delayed';
+      case 'completed': return 'Completed';
       default: return status;
     }
   };
@@ -209,7 +209,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
       <div 
         key={progressId}
         className="relative group"
-        title={`${employee.name} - ${getStatusLabel(status)} - ${daysInBlock}d en bloque`}
+        title={`${employee.name} - ${getStatusLabel(status)} - ${daysInBlock}d in block`}
       >
         <button
           onClick={(e) => {
@@ -265,14 +265,14 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-sm text-slate-800">{period.label}</h4>
-                  <span className="text-xs text-slate-500">Día {period.offsetDays}</span>
+                  <span className="text-xs text-slate-500">Day {period.offsetDays}</span>
                 </div>
               </div>
               {/* Period Stats */}
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
                 <span className="text-xs text-slate-600 flex items-center gap-1">
                   <Users className="w-3 h-3" />
-                  {periodStats.total} empleados
+                  {periodStats.total} employees
                 </span>
                 {periodStats.delayed > 0 && (
                   <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">
@@ -325,7 +325,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                       
                       {/* Quick stats */}
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-500">{stats.total} empleados</span>
+                        <span className="text-gray-500">{stats.total} employees</span>
                         {stats.delayed > 0 && (
                           <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">
                             {stats.delayed} ⚠️
@@ -367,7 +367,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                             className="text-xs text-gray-500 hover:text-gray-700 mb-2 flex items-center gap-1"
                           >
                             <CheckSquare className="w-3 h-3" />
-                            Seleccionar todos
+                            Select all
                           </button>
                         )}
                         
@@ -406,7 +406,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">{employee.name}</p>
-                                  <p className="text-xs text-gray-500">{daysInBlock}d en bloque</p>
+                                  <p className="text-xs text-gray-500">{daysInBlock}d in block</p>
                                 </div>
                                 <span className={cn(
                                   "px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -420,7 +420,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                           
                           {employeesInBlock.length === 0 && (
                             <p className="text-xs text-gray-400 text-center py-4">
-                              Sin empleados {statusFilter !== 'all' && getStatusLabel(statusFilter).toLowerCase()}
+                              No employees {statusFilter !== 'all' && getStatusLabel(statusFilter).toLowerCase()}
                             </p>
                           )}
                         </div>
@@ -467,25 +467,25 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                   <div className="flex items-center gap-2">
                     <h4 className="font-semibold text-sm text-gray-800">{period.label}</h4>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/80 text-gray-600 border">
-                      Día {period.offsetDays}
+                      Day {period.offsetDays}
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-3 mt-1 text-xs">
                     <span className="text-gray-500 flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      {periodStats.total} empleados
+                      {periodStats.total} employees
                     </span>
                     {periodStats.delayed > 0 && (
                       <span className="text-red-600 flex items-center gap-1 font-medium">
                         <AlertTriangle className="w-3 h-3" />
-                        {periodStats.delayed} retrasados
+                        {periodStats.delayed} delayed
                       </span>
                     )}
                     {periodStats.atRisk > 0 && (
                       <span className="text-amber-600 flex items-center gap-1 font-medium">
                         <AlertTriangle className="w-3 h-3" />
-                        {periodStats.atRisk} en riesgo
+                        {periodStats.atRisk} at risk
                       </span>
                     )}
                   </div>
@@ -529,7 +529,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                               <h5 className="font-medium text-gray-900 text-sm">{block.name}</h5>
                               {stats.total > 0 && (
                                 <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
-                                  {stats.total} empleados
+                                  {stats.total} employees
                                 </span>
                               )}
                             </div>
@@ -538,12 +538,12 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                               <div className="flex items-center gap-2 mt-1">
                                 {stats.delayed > 0 && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">
-                                    {stats.delayed} retrasados
+                                    {stats.delayed} delayed
                                   </span>
                                 )}
                                 {stats.atRisk > 0 && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                                    {stats.atRisk} en riesgo
+                                    {stats.atRisk} at risk
                                   </span>
                                 )}
                               </div>
@@ -589,10 +589,10 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                                   ) : (
                                     <Square className="w-4 h-4" />
                                   )}
-                                  {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                                  {allSelected ? 'Deselect all' : 'Select all'}
                                 </button>
                                 <span className="text-xs text-gray-400">
-                                  {employeesInBlock.filter(e => selectedEmployees.has(e.progress.id)).length} seleccionados
+                                  {employeesInBlock.filter(e => selectedEmployees.has(e.progress.id)).length} selected
                                 </span>
                               </div>
                             )}
@@ -649,7 +649,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                                         <span>•</span>
                                         <span className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
-                                          {daysInBlock} días en este bloque
+                                          {daysInBlock} days in this block
                                         </span>
                                       </div>
                                     </div>
@@ -667,8 +667,8 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                               {employeesInBlock.length === 0 && (
                                 <div className="px-3 py-6 text-center text-sm text-gray-400">
                                   {statusFilter !== 'all' 
-                                    ? `No hay empleados ${getStatusLabel(statusFilter).toLowerCase()} en este bloque`
-                                    : 'No hay empleados en este bloque'
+                                    ? `No employees ${getStatusLabel(statusFilter).toLowerCase()} in this block`
+                                    : 'No employees in this block'
                                   }
                                 </div>
                               )}
@@ -689,14 +689,14 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
               <Flag className="w-4 h-4 text-gray-400" />
             </div>
-            <span className="text-sm text-gray-400">Fin del Journey</span>
+            <span className="text-sm text-gray-400">Journey End</span>
           </div>
         )}
 
         {blocksByPeriod.length === 0 && (
           <div className="text-center py-12 text-gray-400">
             <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No hay bloques en este journey</p>
+            <p>No blocks in this journey</p>
           </div>
         )}
       </div>
@@ -710,7 +710,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
         {/* Start node */}
         <div className="flex justify-center">
           <div className="bg-slate-800 text-white px-6 py-3 rounded-xl font-medium shadow-lg">
-            🚀 Inicio del Journey
+            🚀 Journey Start
           </div>
         </div>
         
@@ -738,10 +738,10 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                   <Timer className="w-4 h-4 text-slate-500" />
                   <span className="font-medium text-slate-700">{period.label}</span>
                   <span className="text-xs text-slate-500 bg-white px-2 py-0.5 rounded-full border">
-                    Día {period.offsetDays}
+                    Day {period.offsetDays}
                   </span>
                   <span className="text-xs text-slate-500">
-                    ({periodStats.total} empleados)
+                    ({periodStats.total} employees)
                   </span>
                 </div>
               </div>
@@ -788,7 +788,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
                         
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                           <Users className="w-3 h-3" />
-                          {stats.total} empleados
+                          {stats.total} employees
                         </div>
                         
                         {/* Employee avatars */}
@@ -852,7 +852,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
         <div className="flex justify-center">
           <div className="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-medium flex items-center gap-2">
             <Flag className="w-4 h-4" />
-            Fin del Journey
+            Journey End
           </div>
         </div>
       </div>
@@ -891,7 +891,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
               )}
             >
               <GitBranch className="w-4 h-4" />
-              Árbol
+              Tree
               {viewMode === 'tree' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full" />
               )}
@@ -903,7 +903,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
             <div className="flex items-center gap-1.5 bg-white rounded-lg p-1 border border-gray-200 shadow-sm ml-2">
               <button
                 onClick={() => setLayout('horizontal')}
-                title="Disposición horizontal"
+                title="Horizontal layout"
                 className={cn(
                   "p-1.5 rounded-md transition-all",
                   layout === 'horizontal' 
@@ -915,7 +915,7 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
               </button>
               <button
                 onClick={() => setLayout('vertical')}
-                title="Disposición vertical"
+                title="Vertical layout"
                 className={cn(
                   "p-1.5 rounded-md transition-all",
                   layout === 'vertical' 
@@ -936,10 +936,10 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
             <Filter className="w-4 h-4 text-gray-400" />
             <div className="flex items-center bg-white rounded-lg border border-gray-200 p-0.5">
               {[
-                { id: 'all' as const, label: 'Todos', color: 'text-gray-600' },
-                { id: 'delayed' as const, label: 'Retrasados', color: 'text-red-600' },
-                { id: 'at_risk' as const, label: 'En riesgo', color: 'text-amber-600' },
-                { id: 'on_track' as const, label: 'En tiempo', color: 'text-emerald-600' },
+                { id: 'all' as const, label: 'All', color: 'text-gray-600' },
+                { id: 'delayed' as const, label: 'Delayed', color: 'text-red-600' },
+                { id: 'at_risk' as const, label: 'At risk', color: 'text-amber-600' },
+                { id: 'on_track' as const, label: 'On track', color: 'text-emerald-600' },
               ].map(filter => (
                 <button
                   key={filter.id}
@@ -964,14 +964,14 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
           >
             <Maximize2 className="w-3.5 h-3.5" />
-            Expandir
+            Expand
           </button>
           <button
             onClick={collapseAll}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
           >
             <Minimize2 className="w-3.5 h-3.5" />
-            Colapsar
+            Collapse
           </button>
         </div>
       </div>
@@ -982,33 +982,33 @@ export function MonitorByBlock({ journeyId }: MonitorByBlockProps) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <CheckSquare className="w-5 h-5 text-indigo-600" />
-              <span className="font-semibold text-indigo-700">{totalSelected} empleados seleccionados</span>
+              <span className="font-semibold text-indigo-700">{totalSelected} employees selected</span>
             </div>
             <button
               onClick={clearSelection}
               className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
             >
               <X className="w-3 h-3" />
-              Limpiar
+              Clear
             </button>
           </div>
           
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
               <RotateCcw className="w-4 h-4" />
-              Reiniciar bloque
+              Reset block
             </button>
             <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
               <Zap className="w-4 h-4" />
-              Completar tareas
+              Complete tasks
             </button>
             <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
               <Mail className="w-4 h-4" />
-              Enviar recordatorio
+              Send reminder
             </button>
             <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm">
               <Flag className="w-4 h-4" />
-              Desbloquear
+              Unblock
             </button>
           </div>
         </div>

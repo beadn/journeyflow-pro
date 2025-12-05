@@ -14,9 +14,9 @@ export const WaitNode = memo(({ data }: WaitNodeProps) => {
   const { label, offsetDays, isStart } = data;
 
   const formatOffset = () => {
-    if (offsetDays === 0) return 'Día 0';
-    if (offsetDays > 0) return `+${offsetDays} días`;
-    return `${offsetDays} días`;
+    if (offsetDays === 0) return 'Day 0';
+    if (offsetDays > 0) return `+${offsetDays} days`;
+    return `${offsetDays} days`;
   };
 
   if (isStart) {

@@ -12,26 +12,26 @@ interface JourneySettingsModalProps {
 }
 
 const anchorEvents: { value: AnchorEvent; label: string }[] = [
-  { value: 'start_date', label: 'Fecha de inicio' },
-  { value: 'last_day', label: 'Último día' },
-  { value: 'promotion_date', label: 'Fecha de promoción' },
-  { value: 'cycle_start', label: 'Inicio de ciclo' },
-  { value: 'custom', label: 'Personalizado' },
+  { value: 'start_date', label: 'Start Date' },
+  { value: 'last_day', label: 'Last Day' },
+  { value: 'promotion_date', label: 'Promotion Date' },
+  { value: 'cycle_start', label: 'Cycle Start' },
+  { value: 'custom', label: 'Custom' },
 ];
 
 const eligibilityAttributes = [
-  { value: 'department', label: 'Departamento' },
-  { value: 'location', label: 'Ubicación' },
-  { value: 'employeeType', label: 'Tipo de empleado' },
-  { value: 'contractType', label: 'Tipo de contrato' },
-  { value: 'level', label: 'Nivel' },
+  { value: 'department', label: 'Department' },
+  { value: 'location', label: 'Location' },
+  { value: 'employeeType', label: 'Employee Type' },
+  { value: 'contractType', label: 'Contract Type' },
+  { value: 'level', label: 'Level' },
 ];
 
 const operators = [
-  { value: 'equals', label: 'es igual a' },
-  { value: 'not_equals', label: 'no es igual a' },
-  { value: 'in', label: 'está en' },
-  { value: 'not_in', label: 'no está en' },
+  { value: 'equals', label: 'equals' },
+  { value: 'not_equals', label: 'not equals' },
+  { value: 'in', label: 'is in' },
+  { value: 'not_in', label: 'is not in' },
 ];
 
 const attributeOptions: Record<string, string[]> = {
@@ -97,20 +97,20 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg p-0">
         <DialogHeader className="px-6 py-4 border-b border-border">
-          <DialogTitle className="text-lg font-semibold">Configuración del Workflow</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Journey Settings</DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Nombre
+              Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ej. Onboarding de Ingeniería"
+              placeholder="e.g. Engineering Onboarding"
               className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -118,12 +118,12 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Descripción
+              Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe el propósito de este workflow..."
+              placeholder="Describe the purpose of this journey..."
               rows={2}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
@@ -132,13 +132,13 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
           {/* Status */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Estado
+              Status
             </label>
             <div className="flex gap-2">
               {[
-                { value: 'draft', label: 'Borrador', color: 'bg-gray-100 border-gray-300 text-gray-700' },
-                { value: 'active', label: 'Activo', color: 'bg-emerald-100 border-emerald-300 text-emerald-700' },
-                { value: 'archived', label: 'Archivado', color: 'bg-amber-100 border-amber-300 text-amber-700' },
+                { value: 'draft', label: 'Draft', color: 'bg-gray-100 border-gray-300 text-gray-700' },
+                { value: 'active', label: 'Active', color: 'bg-emerald-100 border-emerald-300 text-emerald-700' },
+                { value: 'archived', label: 'Archived', color: 'bg-amber-100 border-amber-300 text-amber-700' },
               ].map((s) => (
                 <button
                   key={s.value}
@@ -159,7 +159,7 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
           {/* Anchor Event */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Evento ancla
+              Anchor Event
             </label>
             <select
               value={anchorEvent}
@@ -171,7 +171,7 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              Los tiempos del workflow se calculan relativos a este evento
+              Journey timings are calculated relative to this event
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-indigo-500" />
                 <label className="text-sm font-medium text-foreground">
-                  Condiciones de elegibilidad
+                  Eligibility Criteria
                 </label>
               </div>
               {eligibilityCriteria.length === 0 && (
@@ -189,14 +189,14 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
                   onClick={addCriterion}
                   className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                 >
-                  + Añadir filtro
+                  + Add filter
                 </button>
               )}
             </div>
 
             {eligibilityCriteria.length === 0 ? (
               <p className="text-xs text-gray-500 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                Sin condiciones. Todos los empleados son elegibles para este workflow.
+                No conditions set. All employees are eligible for this journey.
               </p>
             ) : (
               <div className="space-y-3">
@@ -239,7 +239,7 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
                         onChange={(e) => updateCriterion(criterion.id, { value: e.target.value })}
                         className="h-9 px-2 text-sm rounded-md border border-gray-300 bg-white"
                       >
-                        <option value="">Seleccionar...</option>
+                        <option value="">Select...</option>
                         {attributeOptions[criterion.attribute]?.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
@@ -260,13 +260,13 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
                   className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                 >
                   <Plus className="w-4 h-4" />
-                  Añadir condición
+                  Add condition
                 </button>
 
                 <div className="flex items-center gap-2 mt-2 p-2 bg-indigo-50 rounded-lg text-xs text-indigo-700">
                   <Users className="w-4 h-4" />
                   <span>
-                    Este workflow solo aplicará a empleados que cumplan {eligibilityCriteria.length === 1 ? 'esta condición' : 'todas estas condiciones'}
+                    This journey will only apply to employees who meet {eligibilityCriteria.length === 1 ? 'this condition' : 'all these conditions'}
                   </span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
             <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
               <div className="text-xs text-amber-700">
-                <strong>Atención:</strong> Cambiar el estado de un workflow activo puede afectar a los empleados que están actualmente en él.
+                <strong>Warning:</strong> Changing the status of an active journey may affect employees currently in it.
               </div>
             </div>
           )}
@@ -286,14 +286,13 @@ export function JourneySettingsModal({ isOpen, onClose, journey }: JourneySettin
 
         <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
           <button onClick={onClose} className="btn-ghost">
-            Cancelar
+            Cancel
           </button>
           <button onClick={handleSave} className="btn-primary">
-            Guardar cambios
+            Save Changes
           </button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

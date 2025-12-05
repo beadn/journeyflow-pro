@@ -40,9 +40,9 @@ const TasksNode = ({ data }: { data: { tasks: Task[]; selected: boolean; onClick
     <div className="p-4">
       <div className="flex items-center gap-2 mb-1">
         <FileText className="w-4 h-4 text-cyan-500" />
-        <div className="text-sm font-semibold text-gray-900">{data.tasks.length} tareas</div>
+        <div className="text-sm font-semibold text-gray-900">{data.tasks.length} tasks</div>
       </div>
-      <div className="text-xs text-gray-500 mb-3">Tareas base del bloque</div>
+      <div className="text-xs text-gray-500 mb-3">Base tasks of the block</div>
       <div className="space-y-2">
         {data.tasks.slice(0, 3).map((task) => (
           <div key={task.id} className="flex items-start gap-2">
@@ -51,7 +51,7 @@ const TasksNode = ({ data }: { data: { tasks: Task[]; selected: boolean; onClick
           </div>
         ))}
         {data.tasks.length > 3 && (
-          <div className="text-xs text-gray-400 pl-4">+{data.tasks.length - 3} más...</div>
+          <div className="text-xs text-gray-400 pl-4">+{data.tasks.length - 3} more...</div>
         )}
       </div>
     </div>
@@ -73,14 +73,14 @@ const ConditionNode = ({ data }: { data: { selected: boolean; onClick: () => voi
     <div className="absolute -top-3 left-4">
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-medium">
         <Diamond className="w-3 h-3" />
-        Condición
+        Condition
       </span>
     </div>
     <div className="p-4 pt-5">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold text-gray-900">Reglas de audiencia</div>
-          <div className="text-xs text-gray-500">{data.rulesCount} regla{data.rulesCount !== 1 ? 's' : ''} definida{data.rulesCount !== 1 ? 's' : ''}</div>
+          <div className="text-sm font-semibold text-gray-900">Audience Rules</div>
+          <div className="text-xs text-gray-500">{data.rulesCount} rule{data.rulesCount !== 1 ? 's' : ''} defined</div>
         </div>
         <Users className="w-5 h-5 text-cyan-400" />
       </div>
@@ -110,7 +110,7 @@ const RuleNode = ({ data }: { data: { rule: BlockRule; selected: boolean; onClic
         </span>
       </div>
       <div className="text-xs text-gray-500 font-medium">
-        → {data.rule.action.type === 'add_task' ? 'Añadir tareas' : 'Añadir bloque'}
+        → {data.rule.action.type === 'add_task' ? 'Add tasks' : 'Add block'}
       </div>
     </div>
   </div>
@@ -128,18 +128,18 @@ const AddedTasksNode = ({ data }: { data: { tasks: Partial<Task>[]; blockTemplat
               <FileText className="w-3 h-3 text-emerald-600" />
             </div>
             <span className="text-xs font-semibold text-emerald-700">
-              {data.tasks.length} tarea{data.tasks.length !== 1 ? 's' : ''} añadida{data.tasks.length !== 1 ? 's' : ''}
+              {data.tasks.length} task{data.tasks.length !== 1 ? 's' : ''} added
             </span>
           </div>
           <div className="space-y-1">
             {data.tasks.slice(0, 3).map((task, i) => (
               <div key={i} className="flex items-center gap-1.5 text-xs text-emerald-600">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="truncate">{task.title || 'Sin título'}</span>
+                <span className="truncate">{task.title || 'Untitled'}</span>
               </div>
             ))}
             {data.tasks.length > 3 && (
-              <div className="text-xs text-emerald-500 pl-3">+{data.tasks.length - 3} más</div>
+              <div className="text-xs text-emerald-500 pl-3">+{data.tasks.length - 3} more</div>
             )}
           </div>
         </>
@@ -149,10 +149,10 @@ const AddedTasksNode = ({ data }: { data: { tasks: Partial<Task>[]; blockTemplat
             <div className="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
               <Layers className="w-3 h-3 text-emerald-600" />
             </div>
-            <span className="text-xs font-semibold text-emerald-700">Bloque añadido</span>
+            <span className="text-xs font-semibold text-emerald-700">Added block</span>
           </div>
           <div className="text-xs text-emerald-600 truncate">
-            {data.blockTemplateName || 'Sin seleccionar'}
+            {data.blockTemplateName || 'Not selected'}
           </div>
         </>
       )}
@@ -220,9 +220,9 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
     if (!block) return;
     const newRule: BlockRule = {
       id: `rule-${Date.now()}`,
-      label: 'Nueva regla',
+      label: 'New rule',
       condition: { attribute: 'department', operator: 'equals', value: '' },
-      action: { type: 'add_task', addedTasks: [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }] },
+      action: { type: 'add_task', addedTasks: [{ title: 'New task', type: 'basic', assigneeType: 'employee' }] },
     };
     addRule(block.id, newRule);
     setSelectedNode('decision');
@@ -416,7 +416,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
     const newTask: Task = {
       id: `task-${Date.now()}`,
       blockId: block.id,
-      title: 'Nueva tarea',
+      title: 'New task',
       type: 'basic',
       assigneeType: 'employee',
       order: tasks.length,
@@ -434,7 +434,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   const handleAddRule = () => {
     const newRule: BlockRule = {
       id: `rule-${Date.now()}`,
-      label: 'Nueva regla',
+      label: 'New rule',
       condition: { attribute: 'department', operator: 'equals', value: '' },
       action: { type: 'add_task' },
     };
@@ -451,7 +451,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       {/* Basic Info */}
       <div className="p-6 space-y-4 border-b border-border">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Nombre del bloque</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Block Name</label>
           <input
             type="text"
             value={block.name}
@@ -462,7 +462,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Período</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Period</label>
             <select
               value={block.periodId}
               onChange={(e) => handlePeriodChange(e.target.value)}
@@ -483,7 +483,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                 placeholder="0"
                 className="w-full h-10 px-3 pr-12 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">días</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">days</span>
             </div>
           </div>
         </div>
@@ -493,8 +493,8 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       <div className="border-b border-border">
         <div className="flex px-6">
           {[
-            { id: 'tasks' as const, label: 'Tareas', count: tasks.length },
-            { id: 'deps' as const, label: 'Dependencias', count: block.dependencyBlockIds.length },
+            { id: 'tasks' as const, label: 'Tasks', count: tasks.length },
+            { id: 'deps' as const, label: 'Dependencies', count: block.dependencyBlockIds.length },
             { id: 'notifications' as const, label: 'Notificaciones', count: 0 },
           ].map((tab) => (
             <button
@@ -524,7 +524,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
         <div className="mt-6 pt-6 border-t border-border">
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
             <GitBranch className="w-4 h-4" />
-            Reglas de audiencia
+            Audience Rules
           </h3>
           {renderAudienceRulesEditor()}
         </div>
@@ -565,7 +565,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Settings className="w-4 h-4" />
-            Configuración del bloque
+            Block Configuration
           </h3>
           
           <div>
@@ -580,7 +580,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Período</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Period</label>
               <select
                 value={block.periodId}
                 onChange={(e) => handlePeriodChange(e.target.value)}
@@ -592,7 +592,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">SLA (días)</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">SLA (days)</label>
               <input
                 type="number"
                 value={block.expectedDurationDays || ''}
@@ -603,13 +603,13 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
           </div>
 
           <div className="pt-3 border-t border-border">
-            <h4 className="text-xs font-semibold text-muted-foreground mb-2">Tareas base</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2">Base Tasks</h4>
             {renderTasksEditor()}
           </div>
 
           <div className="pt-3 border-t border-border">
             <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-              <Link2 className="w-3 h-3" /> Dependencias
+              <Link2 className="w-3 h-3" /> Dependencies
             </h4>
             {renderDependenciesEditor()}
           </div>
@@ -618,10 +618,10 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
           <div className="pt-3 border-t border-border">
             <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <Diamond className="w-4 h-4 text-cyan-500" />
-              Reglas de audiencia
+              Audience Rules
             </h4>
             <p className="text-xs text-muted-foreground mb-3">
-              Define condiciones que añaden tareas o bloques según las características del empleado.
+              Define conditions that add tasks or blocks based on employee characteristics.
             </p>
             {renderAudienceRulesEditor()}
           </div>
@@ -666,7 +666,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
         className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors"
       >
         <Plus className="w-3.5 h-3.5" />
-        Añadir tarea
+        Add task
       </button>
     </div>
   );
@@ -674,7 +674,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
   const renderDependenciesEditor = () => (
     <div className="space-y-1.5">
       {otherBlocks.length === 0 ? (
-        <p className="text-xs text-muted-foreground py-2">No hay otros bloques</p>
+        <p className="text-xs text-muted-foreground py-2">No other blocks</p>
       ) : (
         otherBlocks.map((b) => (
           <label key={b.id} className="flex items-center gap-2 p-2 rounded border border-border hover:bg-muted/50 cursor-pointer text-sm">
@@ -697,7 +697,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       <p className="text-sm text-muted-foreground mb-3">Configura notificaciones</p>
       <button className="text-xs text-primary hover:underline">
         <Plus className="w-3 h-3 inline mr-1" />
-        Añadir notificación
+        Add notification
       </button>
     </div>
   );
@@ -721,7 +721,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       const currentTasks = getTasksForRule(rule);
       const newTask = { 
         id: `rule-task-${Date.now()}`,
-        title: 'Nueva tarea', 
+        title: 'New task', 
         type: 'basic' as const, 
         assigneeType: 'employee' 
       };
@@ -774,9 +774,9 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       <div className="space-y-3">
         {block.rules.length === 0 && (
           <div className="text-center py-6 text-sm text-muted-foreground">
-            No hay reglas de audiencia definidas.
+            No audience rules defined.
             <br />
-            <span className="text-xs">Las reglas permiten añadir tareas o bloques según las características del empleado.</span>
+            <span className="text-xs">Rules allow adding tasks or blocks based on employee characteristics.</span>
           </div>
         )}
         {block.rules.map((rule) => {
@@ -809,7 +809,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                   className="h-7 px-2 rounded border border-border bg-background text-xs"
                 >
                   <option value="department">Departamento</option>
-                  <option value="location">Ubicación</option>
+                  <option value="location">Location</option>
                   <option value="role">Rol</option>
                   <option value="manager">Manager</option>
                 </select>
@@ -843,7 +843,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                     <div className="flex items-center gap-2 flex-1">
                       <FileText className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="text-emerald-700 font-medium">
-                        {ruleTasks.length} tarea{ruleTasks.length !== 1 ? 's' : ''}
+                        {ruleTasks.length} task{ruleTasks.length !== 1 ? 's' : ''}
                       </span>
                       {ruleTasks.length > 0 && (
                         <span className="text-emerald-600 truncate text-xs">
@@ -854,9 +854,9 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                   ) : (
                     <div className="flex items-center gap-2 flex-1">
                       <Layers className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-700 font-medium">Bloque:</span>
+                      <span className="text-emerald-700 font-medium">Block:</span>
                       <span className="text-emerald-600 truncate">
-                        {template?.name || 'Sin seleccionar'}
+                        {template?.name || 'Not selected'}
                       </span>
                     </div>
                   )}
@@ -876,15 +876,15 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                           action: { 
                             ...rule.action, 
                             type: newType,
-                            addedTasks: newType === 'add_task' ? (ruleTasks.length > 0 ? ruleTasks : [{ title: 'Nueva tarea', type: 'basic', assigneeType: 'employee' }]) : undefined,
+                            addedTasks: newType === 'add_task' ? (ruleTasks.length > 0 ? ruleTasks : [{ title: 'New task', type: 'basic', assigneeType: 'employee' }]) : undefined,
                             addedTask: undefined
                           } 
                         });
                       }}
                       className="h-7 px-2 rounded border border-border bg-background text-xs"
                     >
-                      <option value="add_task">Añadir tareas</option>
-                      <option value="add_block">Añadir bloque</option>
+                      <option value="add_task">Add tasks</option>
+                      <option value="add_block">Add block</option>
                     </select>
                   </div>
                   
@@ -897,7 +897,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                             type="text"
                             value={task.title || ''}
                             onChange={(e) => handleUpdateTaskInRule(rule.id, taskIndex, { title: e.target.value })}
-                            placeholder="Título de la tarea..."
+                            placeholder="Task title..."
                             className="flex-1 bg-transparent text-sm focus:outline-none"
                           />
                           <select
@@ -923,7 +923,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                         className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-emerald-300 text-xs text-emerald-600 hover:bg-emerald-50 transition-colors"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        Añadir tarea
+                        Add task
                       </button>
                     </div>
                   )}
@@ -940,7 +940,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                         })}
                         className="w-full h-8 px-3 rounded border border-border bg-background text-sm"
                       >
-                        <option value="">Seleccionar bloque...</option>
+                        <option value="">Select block...</option>
                         {blockTemplates.map((template) => (
                           <option key={template.id} value={template.id}>
                             {template.name} ({template.category})
@@ -964,7 +964,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
           className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-cyan-300 text-sm text-cyan-600 hover:bg-cyan-50 hover:border-cyan-400 transition-colors font-medium"
         >
           <Plus className="w-4 h-4" />
-          Nueva regla de audiencia
+          New audience rule
         </button>
       </div>
     );
@@ -978,7 +978,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
       )}>
         <DialogHeader className="px-6 py-4 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold">Editar bloque</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Edit Block</DialogTitle>
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
@@ -1004,7 +1004,7 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
                   )}
                 >
                   <GitBranch className="w-3.5 h-3.5" />
-                  Árbol
+                  Tree
                 </button>
               </div>
             </div>
@@ -1018,10 +1018,10 @@ export function BlockEditorModal({ isOpen, onClose, blockId }: BlockEditorModalP
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3 flex-shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Cancelar
+            Cancel
           </button>
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-            Guardar
+            Save
           </button>
         </div>
       </DialogContent>

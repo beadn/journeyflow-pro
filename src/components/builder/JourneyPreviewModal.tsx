@@ -153,10 +153,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
         const conditionMet = evaluateCondition(rule, conditions);
         
         if (conditionMet) {
-          if (rule.action.type === 'skip_block') {
-            skippedBlock.skip = true;
-            skippedBlock.reason = rule.label;
-          } else if (rule.action.type === 'add_task') {
+          if (rule.action.type === 'add_task') {
             const tasksToAdd = rule.action.addedTasks || (rule.action.addedTask ? [rule.action.addedTask] : []);
             tasksToAdd.forEach(task => {
               conditionalTasks.push({
@@ -282,7 +279,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
               </div>
               <div>
                 <DialogTitle className="text-lg font-semibold">Vista previa del Journey</DialogTitle>
-                <p className="text-sm text-muted-foreground">Simula las tareas según condiciones del empleado</p>
+                <p className="text-sm text-muted-foreground">Simulate tasks based on employee conditions</p>
               </div>
             </div>
           </div>
@@ -293,7 +290,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
           <div className="w-80 border-r border-border p-4 space-y-4 bg-muted/30 overflow-y-auto">
             <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
               <User className="w-4 h-4" />
-              Condiciones del empleado
+              Employee Conditions
             </h3>
 
             <div className="space-y-3">
@@ -321,7 +318,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                   <MapPin className="w-3 h-3 inline mr-1" />
-                  Ubicación
+                  Location
                 </label>
                 <select
                   value={conditions.location}
@@ -340,7 +337,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                   <Briefcase className="w-3 h-3 inline mr-1" />
-                  Tipo de empleado
+                  Employee Type
                 </label>
                 <select
                   value={conditions.employeeType}
@@ -407,15 +404,15 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
               <div className="p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100/50 border border-indigo-200">
                 <h4 className="text-xs font-semibold text-indigo-700 mb-2">Resumen</h4>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  <p><span className="font-medium text-foreground">{activeBlocks}</span> bloques activos</p>
+                  <p><span className="font-medium text-foreground">{activeBlocks}</span> active blocks</p>
                   {subBlockCount > 0 && (
                     <p className="flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-purple-500" />
-                      <span className="font-medium text-purple-600">{subBlockCount}</span> sub-bloques condicionales
+                      <span className="font-medium text-purple-600">{subBlockCount}</span> conditional sub-blocks
                     </p>
                   )}
-                  <p><span className="font-medium text-foreground">{totalTaskCount}</span> tareas totales</p>
-                  <p><span className="font-medium text-foreground">{journey.periods.length}</span> periodos de tiempo</p>
+                  <p><span className="font-medium text-foreground">{totalTaskCount}</span> total tasks</p>
+                  <p><span className="font-medium text-foreground">{journey.periods.length}</span> time periods</p>
                 </div>
               </div>
             </div>
@@ -472,20 +469,20 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                             {period.label}
                           </h4>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                            Día {period.offsetDays}
+                            Day {period.offsetDays}
                           </span>
                         </div>
                         
                         {/* Period Stats */}
                         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                          <span>{stats.totalBlocks} bloques</span>
+                          <span>{stats.totalBlocks} blocks</span>
                           {stats.subBlocks > 0 && (
                             <span className="flex items-center gap-1 text-purple-600">
                               <Sparkles className="w-3 h-3" />
-                              {stats.subBlocks} sub-bloques
+                              {stats.subBlocks} sub-blocks
                             </span>
                           )}
-                          <span>{stats.totalTasks} tareas</span>
+                          <span>{stats.totalTasks} tasks</span>
                         </div>
                       </div>
                     </div>
@@ -542,7 +539,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                                         {isSubBlock && (
                                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700">
                                             <Sparkles className="w-3 h-3" />
-                                            Sub-bloque
+                                            Sub-block
                                           </span>
                                         )}
                                         <h5 className="font-medium text-gray-900 text-sm">{block.name}</h5>
@@ -568,7 +565,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                                         </span>
                                       ) : (
                                         <span className="text-xs text-gray-500">
-                                          {taskCount} tareas
+                                          {taskCount} tasks
                                         </span>
                                       )}
                                       <button className="p-1 hover:bg-black/5 rounded transition-colors">
@@ -614,7 +611,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                                     ))}
 
                                     {baseTasks.length === 0 && conditionalTasks.length === 0 && (
-                                      <p className="text-xs text-gray-400 text-center py-2">Sin tareas</p>
+                                      <p className="text-xs text-gray-400 text-center py-2">No tasks</p>
                                     )}
                                   </div>
                                 </div>
@@ -652,7 +649,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
               {previewByPeriod.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No hay bloques en este journey</p>
+                  <p>No blocks in this journey</p>
                 </div>
               )}
               </div>

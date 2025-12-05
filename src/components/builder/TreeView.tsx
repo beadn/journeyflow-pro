@@ -279,7 +279,7 @@ function InlineRuleEditor({
   return (
     <div className="bg-white rounded-lg shadow-lg border border-cyan-200 p-3 min-w-[280px] z-50" onClick={e => e.stopPropagation()}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-700">{rule ? 'Editar regla' : 'Nueva regla'}</span>
+        <span className="text-xs font-semibold text-gray-700">{rule ? 'Edit rule' : 'New rule'}</span>
         <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded">
           <X className="w-3 h-3 text-gray-400" />
         </button>
@@ -295,8 +295,8 @@ function InlineRuleEditor({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="department">Departamento</SelectItem>
-              <SelectItem value="location">Ubicación</SelectItem>
-              <SelectItem value="employeeType">Tipo empleado</SelectItem>
+              <SelectItem value="location">Location</SelectItem>
+              <SelectItem value="employeeType">Employee Type</SelectItem>
               <SelectItem value="role">Rol</SelectItem>
             </SelectContent>
           </Select>
@@ -318,8 +318,8 @@ function InlineRuleEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="add_task">Añadir tarea</SelectItem>
-            <SelectItem value="add_block">Añadir bloque</SelectItem>
+            <SelectItem value="add_task">Add tasks</SelectItem>
+            <SelectItem value="add_block">Add block</SelectItem>
           </SelectContent>
         </Select>
         
@@ -327,13 +327,13 @@ function InlineRuleEditor({
           <Input 
             value={taskTitle} 
             onChange={e => setTaskTitle(e.target.value)}
-            placeholder="Título de la tarea..."
+            placeholder="Task title..."
             className="h-7 text-xs"
           />
         ) : (
           <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
             <SelectTrigger className="h-7 text-xs">
-              <SelectValue placeholder="Seleccionar bloque..." />
+              <SelectValue placeholder="Select block..." />
             </SelectTrigger>
             <SelectContent>
               {blockTemplates.map(t => (
@@ -348,7 +348,7 @@ function InlineRuleEditor({
       <div className="flex gap-2">
         <Button size="sm" onClick={handleSave} className="flex-1 h-7 text-xs">
           <Save className="w-3 h-3 mr-1" />
-          Guardar
+          Save
         </Button>
         {rule && onDelete && (
           <Button size="sm" variant="destructive" onClick={onDelete} className="h-7 text-xs">
@@ -436,14 +436,14 @@ function InlineNextBlockEditor({
   return (
     <div className="bg-white rounded-lg shadow-lg border border-blue-200 p-3 min-w-[280px] max-h-[300px] overflow-y-auto z-50" onClick={e => e.stopPropagation()}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-700">¿Qué sigue después?</span>
+        <span className="text-xs font-semibold text-gray-700">What comes next?</span>
         <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded">
           <X className="w-3 h-3 text-gray-400" />
         </button>
       </div>
       
       <div className="text-[10px] text-gray-500 mb-2">
-        Selecciona los bloques que van después de este:
+        Select blocks that come after this one:
       </div>
       
       {sortedPeriods.map(period => {
@@ -456,7 +456,7 @@ function InlineNextBlockEditor({
               <Timer className="w-3 h-3 text-gray-400" />
               <span className="text-[10px] font-medium text-gray-600">{period.label}</span>
               <span className="text-[9px] text-gray-400">
-                {period.offsetDays === 0 ? 'Día 0' : `+${period.offsetDays}d`}
+                {period.offsetDays === 0 ? 'Day 0' : `+${period.offsetDays}d`}
               </span>
             </div>
             <div className="space-y-1 pl-5">
@@ -484,7 +484,7 @@ function InlineNextBlockEditor({
       
       {eligibleBlocks.length === 0 && (
         <div className="text-[11px] text-gray-400 text-center py-4">
-          No hay bloques disponibles para conectar
+          No blocks available to connect
         </div>
       )}
       
@@ -492,10 +492,10 @@ function InlineNextBlockEditor({
       <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
         <Button size="sm" onClick={handleSave} className="flex-1 h-7 text-xs">
           <Save className="w-3 h-3 mr-1" />
-          Guardar
+          Save
         </Button>
         <Button size="sm" variant="outline" onClick={onCancel} className="h-7 text-xs">
-          Cancelar
+          Cancel
         </Button>
       </div>
     </div>
@@ -552,7 +552,7 @@ function InternalTreeView({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 min-w-[200px] max-w-[240px]">
         <div className="flex items-center gap-2 mb-2">
           <FileText className="w-4 h-4" style={{ color: accent }} />
-          <span className="text-xs font-semibold text-gray-900">{tasks.length} tareas</span>
+          <span className="text-xs font-semibold text-gray-900">{tasks.length} tasks</span>
         </div>
         <div className="space-y-1.5 max-h-[100px] overflow-y-auto">
           {tasks.slice(0, 4).map((task) => (
@@ -562,9 +562,9 @@ function InternalTreeView({
             </div>
           ))}
           {tasks.length > 4 && (
-            <div className="text-[10px] text-gray-400 pl-3.5">+{tasks.length - 4} más...</div>
+            <div className="text-[10px] text-gray-400 pl-3.5">+{tasks.length - 4} more...</div>
           )}
-          {tasks.length === 0 && <div className="text-[11px] text-gray-400">Sin tareas</div>}
+          {tasks.length === 0 && <div className="text-[11px] text-gray-400">No tasks</div>}
         </div>
       </div>
       
@@ -578,13 +578,13 @@ function InternalTreeView({
         <div className="absolute -top-2.5 left-3">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-[10px] font-medium">
             <Diamond className="w-3 h-3" />
-            Condición
+            Condition
           </span>
         </div>
         <div className="flex items-center justify-between pt-1">
           <div>
-            <div className="text-xs font-semibold text-gray-900">Reglas de audiencia</div>
-            <div className="text-[10px] text-gray-500">{rules.length} regla{rules.length !== 1 ? 's' : ''}</div>
+            <div className="text-xs font-semibold text-gray-900">Audience Rules</div>
+            <div className="text-[10px] text-gray-500">{rules.length} rule{rules.length !== 1 ? 's' : ''}</div>
           </div>
           <Users className="w-4 h-4 text-cyan-400" />
         </div>
@@ -647,7 +647,7 @@ function InternalTreeView({
       
       {!hasRules && (
         <div className="mt-3 text-[10px] text-gray-400 px-3 py-2 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-          Sin reglas definidas
+          No rules defined
         </div>
       )}
     </div>
@@ -710,7 +710,7 @@ function RuleBranch({
             </span>
           </div>
           <div className="text-[9px] text-gray-500 font-medium">
-            → {rule.action.type === 'add_task' ? 'Añadir tareas' : 'Añadir bloque'}
+            → {rule.action.type === 'add_task' ? 'Add tasks' : 'Add block'}
           </div>
         </div>
         
@@ -743,7 +743,7 @@ function RuleBranch({
             {/* Nested rules indicator */}
             {hasNestedRules && (
               <div className="absolute -top-1.5 -right-1.5 z-10">
-                <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center shadow-sm" title={`${templateRules.length} regla(s) anidada(s)`}>
+                <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center shadow-sm" title={`${templateRules.length} nested rule(s)`}>
                   <GitBranch className="w-2.5 h-2.5 text-white" />
                 </div>
               </div>
@@ -752,15 +752,15 @@ function RuleBranch({
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-purple-500" />
-                <span className="text-[9px] font-semibold text-purple-700">Sub-bloque</span>
+                <span className="text-[9px] font-semibold text-purple-700">Sub-block</span>
               </div>
               {isExpanded ? <ChevronDown className="w-3 h-3 text-gray-400" /> : <ChevronRight className="w-3 h-3 text-gray-400" />}
             </div>
             <div className="text-[10px] font-medium text-gray-700 truncate">{blockTemplate.name}</div>
             <div className="flex items-center gap-2 text-[9px] text-gray-400">
-              <span>{templateTasks.length} tareas</span>
+              <span>{templateTasks.length} tasks</span>
               {hasNestedRules && (
-                <span className="text-purple-500 font-medium">{templateRules.length} regla{templateRules.length !== 1 ? 's' : ''}</span>
+                <span className="text-purple-500 font-medium">{templateRules.length} rule{templateRules.length !== 1 ? 's' : ''}</span>
               )}
             </div>
             
@@ -774,7 +774,7 @@ function RuleBranch({
                   </div>
                 ))}
                 {templateRules.length > 2 && (
-                  <div className="text-[7px] text-purple-400">+{templateRules.length - 2} más...</div>
+                  <div className="text-[7px] text-purple-400">+{templateRules.length - 2} more...</div>
                 )}
               </div>
             )}
@@ -788,7 +788,7 @@ function RuleBranch({
                 <>
                   <div className="w-0.5 h-3 bg-gray-300" />
                   <div className="bg-gray-50 rounded-lg border border-gray-200 p-2 min-w-[140px]">
-                    <div className="text-[9px] font-medium text-gray-600 mb-1">Tareas:</div>
+                    <div className="text-[9px] font-medium text-gray-600 mb-1">Tasks:</div>
                     {templateTasks.slice(0, 3).map((task, i) => (
                       <div key={i} className="flex items-center gap-1.5 text-[8px] text-gray-500">
                         <div className="w-1 h-1 rounded-full" style={{ backgroundColor: getCategoryConfig(blockTemplate.category).accent }} />
@@ -796,7 +796,7 @@ function RuleBranch({
                       </div>
                     ))}
                     {templateTasks.length > 3 && (
-                      <div className="text-[8px] text-gray-400 pl-2">+{templateTasks.length - 3} más</div>
+                      <div className="text-[8px] text-gray-400 pl-2">+{templateTasks.length - 3} more</div>
                     )}
                   </div>
                 </>
@@ -832,7 +832,7 @@ function RuleBranch({
                   <div className="bg-purple-100 rounded-lg border border-dashed border-purple-300 px-3 py-1.5">
                     <div className="flex items-center gap-1 text-[8px] text-purple-600">
                       <GitBranch className="w-3 h-3" />
-                      <span>{templateRules.length} regla(s) más profundas...</span>
+                      <span>{templateRules.length} deeper rule(s)...</span>
                     </div>
                   </div>
                 </>
@@ -846,16 +846,16 @@ function RuleBranch({
             <div className="w-4 h-4 rounded bg-emerald-100 flex items-center justify-center">
               <FileText className="w-2.5 h-2.5 text-emerald-600" />
             </div>
-            <span className="text-[10px] font-semibold text-emerald-700">{addedTasks.length} tarea{addedTasks.length !== 1 ? 's' : ''}</span>
+            <span className="text-[10px] font-semibold text-emerald-700">{addedTasks.length} task{addedTasks.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="space-y-0.5">
             {addedTasks.slice(0, 2).map((task, i) => (
               <div key={i} className="text-[9px] text-emerald-600 truncate flex items-center gap-1">
                 <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
-                {task.title || 'Sin título'}
+                {task.title || 'Untitled'}
               </div>
             ))}
-            {addedTasks.length > 2 && <div className="text-[8px] text-emerald-500">+{addedTasks.length - 2} más</div>}
+            {addedTasks.length > 2 && <div className="text-[8px] text-emerald-500">+{addedTasks.length - 2} more</div>}
           </div>
         </div>
       )}
@@ -877,7 +877,7 @@ function NestedRuleMini({ rule, depth }: { rule: { id: string; label: string; co
           <span className="text-purple-600 font-medium">SI</span> {rule.condition.attribute} = <span className="text-purple-600">{rule.condition.value}</span>
         </div>
         <div className="text-[7px] text-gray-400 mt-0.5">
-          → {rule.action.type === 'add_task' ? 'tareas' : nestedTemplate?.name || 'bloque'}
+          → {rule.action.type === 'add_task' ? 'tasks' : nestedTemplate?.name || 'block'}
           {hasDeepNesting && (
             <span className="text-purple-500 ml-1">
               <GitBranch className="w-2 h-2 inline" />
@@ -900,7 +900,7 @@ function StartNode({ data }: { data: { onAddBlock: () => void } }) {
         <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
           <Play className="w-3 h-3 text-white" />
         </div>
-        <span>Inicio del Journey</span>
+        <span>Journey Start</span>
       </div>
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-white !border-2 !border-primary !rounded-full !-bottom-1.5" />
       
@@ -909,7 +909,7 @@ function StartNode({ data }: { data: { onAddBlock: () => void } }) {
         <button
           onClick={(e) => { e.stopPropagation(); data.onAddBlock(); }}
           className="w-5 h-5 rounded-full bg-white text-gray-400 hover:text-primary hover:bg-primary/10 border border-gray-300 hover:border-primary flex items-center justify-center transition-all shadow-sm"
-          title="Añadir primer bloque"
+          title="Add first block"
         >
           <Plus className="w-3 h-3" />
         </button>
@@ -931,13 +931,13 @@ function WaitNode({ data }: { data: { label: string; offsetDays: number; periodI
           <div className="text-sm font-semibold text-gray-700">{data.label}</div>
         </div>
         <div className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs font-medium">
-          {data.offsetDays === 0 ? 'Día 0' : data.offsetDays > 0 ? `+${data.offsetDays}d` : `${data.offsetDays}d`}
+          {data.offsetDays === 0 ? 'Day 0' : data.offsetDays > 0 ? `+${data.offsetDays}d` : `${data.offsetDays}d`}
         </div>
         {data.onAddBlock && (
           <button
             onClick={(e) => { e.stopPropagation(); data.onAddBlock?.(data.periodId); }}
             className="w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-            title="Añadir bloque en este periodo"
+            title="Add block to this period"
           >
             <Plus className="w-3.5 h-3.5 text-primary" />
           </button>
@@ -1015,7 +1015,7 @@ function BlockNode({ data }: {
             {/* Tooltip */}
             <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block z-50">
               <div className="bg-gray-900 text-white text-[10px] px-2 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
-                <div className="font-medium mb-1">Depende de periodo anterior:</div>
+                <div className="font-medium mb-1">Depends on previous period:</div>
                 {previousPeriodDepNames.map((name, i) => (
                   <div key={i} className="text-gray-300">• {name}</div>
                 ))}
@@ -1040,12 +1040,12 @@ function BlockNode({ data }: {
             <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
               <div className="flex items-center gap-1">
                 <CheckSquare className="w-3 h-3" />
-                <span>{tasks.length} tareas</span>
+                <span>{tasks.length} tasks</span>
               </div>
               {hasRules && (
                 <div className="flex items-center gap-1 text-cyan-600">
                   <GitBranch className="w-3 h-3" />
-                  <span>{block.rules.length} reglas</span>
+                  <span>{block.rules.length} rules</span>
                 </div>
               )}
               {hasDeps && (
@@ -1090,7 +1090,7 @@ function BlockNode({ data }: {
                 ? "bg-blue-100 text-blue-600 hover:bg-blue-200 border border-blue-300"
                 : "bg-white text-gray-400 hover:text-blue-500 hover:bg-blue-50 border border-gray-300"
           )}
-          title={hasChildren ? `${childBlocks.length} bloque(s) siguiente(s) - click para editar` : "Conectar siguiente bloque"}
+          title={hasChildren ? `${childBlocks.length} following block(s) - click to edit` : "Connect next block"}
         >
           <Plus className="w-3 h-3" />
         </button>
@@ -1432,10 +1432,10 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
       {/* Action buttons */}
       <div className="absolute bottom-6 right-6 flex gap-2 z-10">
         <button onClick={expandAll} className="bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm hover:shadow font-medium text-xs">
-          <ChevronDown className="w-3.5 h-3.5" />Expandir todo
+          <ChevronDown className="w-3.5 h-3.5" />Expand All
         </button>
         <button onClick={collapseAll} className="bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm hover:shadow font-medium text-xs">
-          <ChevronRight className="w-3.5 h-3.5" />Colapsar todo
+          <ChevronRight className="w-3.5 h-3.5" />Collapse All
         </button>
       </div>
 
@@ -1443,10 +1443,10 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
       {/* Help */}
       <div className="absolute top-6 left-6 bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 z-10">
         <div className="text-xs text-gray-500 space-y-1">
-          <div><span className="font-medium">Click ▶</span> expandir bloque</div>
+          <div><span className="font-medium">Click ▶</span> expand block</div>
           <div><span className="font-medium">Doble click</span> abrir editor completo</div>
-          <div><span className="font-medium">Click + abajo</span> conectar siguiente bloque</div>
-          <div><span className="font-medium">Click + reglas</span> añadir regla de audiencia</div>
+          <div><span className="font-medium">Click + below</span> connect next block</div>
+          <div><span className="font-medium">Click + rules</span> add audience rule</div>
         </div>
       </div>
 

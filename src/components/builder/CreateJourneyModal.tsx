@@ -14,33 +14,33 @@ interface CreateJourneyModalProps {
 const journeyTypes: { value: JourneyType; label: string; icon: string }[] = [
   { value: 'onboarding', label: 'Onboarding', icon: '🚀' },
   { value: 'offboarding', label: 'Offboarding', icon: '👋' },
-  { value: 'promotion', label: 'Promoción', icon: '⭐' },
-  { value: 'role_change', label: 'Cambio de rol', icon: '🔄' },
-  { value: 'performance_cycle', label: 'Ciclo de rendimiento', icon: '📊' },
-  { value: 'custom', label: 'Personalizado', icon: '📋' },
+  { value: 'promotion', label: 'Promotion', icon: '⭐' },
+  { value: 'role_change', label: 'Role Change', icon: '🔄' },
+  { value: 'performance_cycle', label: 'Performance Cycle', icon: '📊' },
+  { value: 'custom', label: 'Custom', icon: '📋' },
 ];
 
 const anchorEvents: { value: AnchorEvent; label: string }[] = [
-  { value: 'start_date', label: 'Fecha de inicio' },
-  { value: 'last_day', label: 'Último día' },
-  { value: 'promotion_date', label: 'Fecha de promoción' },
-  { value: 'cycle_start', label: 'Inicio de ciclo' },
-  { value: 'custom', label: 'Personalizado' },
+  { value: 'start_date', label: 'Start Date' },
+  { value: 'last_day', label: 'Last Day' },
+  { value: 'promotion_date', label: 'Promotion Date' },
+  { value: 'cycle_start', label: 'Cycle Start' },
+  { value: 'custom', label: 'Custom' },
 ];
 
 const eligibilityAttributes = [
-  { value: 'department', label: 'Departamento' },
-  { value: 'location', label: 'Ubicación' },
-  { value: 'employeeType', label: 'Tipo de empleado' },
-  { value: 'contractType', label: 'Tipo de contrato' },
-  { value: 'level', label: 'Nivel' },
+  { value: 'department', label: 'Department' },
+  { value: 'location', label: 'Location' },
+  { value: 'employeeType', label: 'Employee Type' },
+  { value: 'contractType', label: 'Contract Type' },
+  { value: 'level', label: 'Level' },
 ];
 
 const operators = [
-  { value: 'equals', label: 'es igual a' },
-  { value: 'not_equals', label: 'no es igual a' },
-  { value: 'in', label: 'está en' },
-  { value: 'not_in', label: 'no está en' },
+  { value: 'equals', label: 'equals' },
+  { value: 'not_equals', label: 'not equals' },
+  { value: 'in', label: 'is in' },
+  { value: 'not_in', label: 'is not in' },
 ];
 
 const attributeOptions: Record<string, string[]> = {
@@ -81,14 +81,14 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
 
   const handleCreate = () => {
     const defaultPeriods: Period[] = [
-      { id: `period-${Date.now()}-1`, label: 'Día 0', offsetDays: 0, order: 0 },
-      { id: `period-${Date.now()}-2`, label: '+7 días', offsetDays: 7, order: 1 },
-      { id: `period-${Date.now()}-3`, label: '+30 días', offsetDays: 30, order: 2 },
+      { id: `period-${Date.now()}-1`, label: 'Day 0', offsetDays: 0, order: 0 },
+      { id: `period-${Date.now()}-2`, label: '+7 days', offsetDays: 7, order: 1 },
+      { id: `period-${Date.now()}-3`, label: '+30 days', offsetDays: 30, order: 2 },
     ];
 
     const journey: Journey = {
       id: `journey-${Date.now()}`,
-      name: name || 'Nuevo Journey',
+      name: name || 'New Journey',
       type,
       anchorEvent,
       periods: defaultPeriods,
@@ -113,20 +113,20 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg p-0">
         <DialogHeader className="px-6 py-4 border-b border-border">
-          <DialogTitle className="text-lg font-semibold">Crear nuevo Workflow</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Create New Journey</DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Nombre del workflow
+              Journey Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ej. Onboarding de Ingeniería"
+              placeholder="e.g. Engineering Onboarding"
               className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -134,7 +134,7 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
           {/* Type */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Tipo de workflow
+              Journey Type
             </label>
             <div className="grid grid-cols-3 gap-2">
               {journeyTypes.map((jt) => (
@@ -158,7 +158,7 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
           {/* Anchor Event */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Evento ancla
+              Anchor Event
             </label>
             <select
               value={anchorEvent}
@@ -170,7 +170,7 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              Los tiempos del workflow se calculan relativos a este evento
+              Journey timings are calculated relative to this event
             </p>
           </div>
 
@@ -180,16 +180,16 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-gray-500" />
                 <label className="text-sm font-medium text-foreground">
-                  Condiciones de elegibilidad
+                  Eligibility Criteria
                 </label>
-                <span className="text-xs text-gray-400">(opcional)</span>
+                <span className="text-xs text-gray-400">(optional)</span>
               </div>
               {!showEligibility && eligibilityCriteria.length === 0 && (
                 <button
                   onClick={() => setShowEligibility(true)}
                   className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                 >
-                  + Añadir filtro
+                  + Add filter
                 </button>
               )}
             </div>
@@ -197,7 +197,7 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
             {(showEligibility || eligibilityCriteria.length > 0) && (
               <div className="space-y-3">
                 <p className="text-xs text-gray-500 mb-2">
-                  Define qué empleados son elegibles para este workflow
+                  Define which employees are eligible for this journey
                 </p>
 
                 {eligibilityCriteria.map((criterion, idx) => (
@@ -239,7 +239,7 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
                         onChange={(e) => updateCriterion(criterion.id, { value: e.target.value })}
                         className="h-9 px-2 text-sm rounded-md border border-gray-300 bg-white"
                       >
-                        <option value="">Seleccionar...</option>
+                        <option value="">Select...</option>
                         {attributeOptions[criterion.attribute]?.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
@@ -260,14 +260,14 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
                   className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                 >
                   <Plus className="w-4 h-4" />
-                  Añadir condición
+                  Add condition
                 </button>
 
                 {eligibilityCriteria.length > 0 && (
                   <div className="flex items-center gap-2 mt-2 p-2 bg-indigo-50 rounded-lg text-xs text-indigo-700">
                     <Users className="w-4 h-4" />
                     <span>
-                      Este workflow solo aplicará a empleados que cumplan {eligibilityCriteria.length === 1 ? 'esta condición' : 'todas estas condiciones'}
+                      This journey will only apply to employees who meet {eligibilityCriteria.length === 1 ? 'this condition' : 'all these conditions'}
                     </span>
                   </div>
                 )}
@@ -278,10 +278,10 @@ export function CreateJourneyModal({ isOpen, onClose, onCreated }: CreateJourney
 
         <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
           <button onClick={onClose} className="btn-ghost">
-            Cancelar
+            Cancel
           </button>
           <button onClick={handleCreate} className="btn-primary">
-            Crear Workflow
+            Create Journey
           </button>
         </div>
       </DialogContent>

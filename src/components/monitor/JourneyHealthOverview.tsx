@@ -112,9 +112,9 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
     if (delayRate > 20) {
       result.push({
         type: 'warning',
-        title: `${Math.round(delayRate)}% de empleados retrasados`,
-        description: 'Considera revisar los bloques con más retrasos',
-        action: 'Ver bloques problemáticos'
+        title: `${Math.round(delayRate)}% of employees delayed`,
+        description: 'Consider reviewing blocks with most delays',
+        action: 'View problematic blocks'
       });
     }
     
@@ -122,8 +122,8 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
     if (metrics.completed > 0 && metrics.averageDuration < 14) {
       result.push({
         type: 'success',
-        title: 'Tiempo promedio excelente',
-        description: `Los empleados completan en ${metrics.averageDuration} días en promedio`,
+        title: 'Excellent average time',
+        description: `Employees complete in ${metrics.averageDuration} days on average`,
       });
     }
     
@@ -132,9 +132,9 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
       const worst = bottlenecks[0];
       result.push({
         type: 'warning',
-        title: `"${worst.block.name}" es un cuello de botella`,
-        description: `${worst.metrics.delayedCount} retrasados y ${worst.metrics.atRiskCount} en riesgo`,
-        action: 'Revisar bloque'
+        title: `"${worst.block.name}" is a bottleneck`,
+        description: `${worst.metrics.delayedCount} delayed and ${worst.metrics.atRiskCount} at risk`,
+        action: 'Review block'
       });
     }
     
@@ -145,8 +145,8 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
     if (completionRate > 50) {
       result.push({
         type: 'success',
-        title: `${Math.round(completionRate)}% tasa de completitud`,
-        description: 'El journey está progresando bien'
+        title: `${Math.round(completionRate)}% completion rate`,
+        description: 'The journey is progressing well'
       });
     }
     
@@ -154,9 +154,9 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
     if (metrics.atRisk > 5) {
       result.push({
         type: 'info',
-        title: `${metrics.atRisk} empleados en riesgo`,
-        description: 'Actúa ahora para evitar retrasos',
-        action: 'Ver empleados en riesgo'
+        title: `${metrics.atRisk} employees at risk`,
+        description: 'Act now to avoid delays',
+        action: 'View at-risk employees'
       });
     }
     
@@ -177,7 +177,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{journey.name}</h2>
-          <p className="text-sm text-gray-500 mt-1">Dashboard de salud del journey</p>
+          <p className="text-sm text-gray-500 mt-1">Journey health dashboard</p>
         </div>
         
         {/* Health Score Ring */}
@@ -214,7 +214,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
               "text-lg font-semibold",
               healthScore >= 70 ? 'text-emerald-600' : healthScore >= 40 ? 'text-amber-600' : 'text-red-600'
             )}>
-              {healthScore >= 70 ? 'Excelente' : healthScore >= 40 ? 'Necesita atención' : 'Crítico'}
+              {healthScore >= 70 ? 'Excellent' : healthScore >= 40 ? 'Needs attention' : 'Critical'}
             </p>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             <span className="text-xs font-medium text-gray-400">Total</span>
           </div>
           <p className="text-3xl font-bold text-gray-900">{metrics.totalEmployees}</p>
-          <p className="text-sm text-gray-500 mt-1">empleados en journey</p>
+          <p className="text-sm text-gray-500 mt-1">employees in journey</p>
         </div>
 
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
@@ -243,7 +243,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             </span>
           </div>
           <p className="text-3xl font-bold text-emerald-600">{metrics.onTrack}</p>
-          <p className="text-sm text-gray-500 mt-1">en tiempo</p>
+          <p className="text-sm text-gray-500 mt-1">on track</p>
         </div>
 
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
@@ -256,7 +256,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             </span>
           </div>
           <p className="text-3xl font-bold text-amber-600">{metrics.atRisk}</p>
-          <p className="text-sm text-gray-500 mt-1">en riesgo</p>
+          <p className="text-sm text-gray-500 mt-1">at risk</p>
         </div>
 
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
@@ -269,7 +269,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             </span>
           </div>
           <p className="text-3xl font-bold text-red-600">{metrics.delayed}</p>
-          <p className="text-sm text-gray-500 mt-1">retrasados</p>
+          <p className="text-sm text-gray-500 mt-1">delayed</p>
         </div>
       </div>
 
@@ -280,7 +280,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              <h3 className="font-semibold text-gray-900">Completados por Mes</h3>
+              <h3 className="font-semibold text-gray-900">Completions by Month</h3>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-emerald-600">{metrics.completed}</span>
@@ -293,7 +293,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             {(() => {
               // Calculate completions by month from real data
               const now = new Date();
-              const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
               
               // Get last 6 months
               const monthlyData: { month: string; count: number; isCurrent: boolean }[] = [];
@@ -353,15 +353,15 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-emerald-500" />
-                <span className="text-xs text-gray-500">Mes actual</span>
+                <span className="text-xs text-gray-500">Current month</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-gray-200" />
-                <span className="text-xs text-gray-500">Meses anteriores</span>
+                <span className="text-xs text-gray-500">Previous months</span>
               </div>
             </div>
             <span className="text-sm text-gray-500">
-              <strong className="text-emerald-600">{metrics.completionRate}%</strong> tasa de completitud
+              <strong className="text-emerald-600">{metrics.completionRate}%</strong> completion rate
             </span>
           </div>
         </div>
@@ -371,24 +371,24 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
           <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 text-white shadow-lg flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-slate-300" />
-              <span className="text-slate-300 text-sm">Tiempo promedio</span>
+              <span className="text-slate-300 text-sm">Average time</span>
             </div>
             <p className="text-3xl font-bold">{metrics.averageDuration}<span className="text-lg">d</span></p>
             <p className="text-slate-400 text-xs mt-1">
-              para completar el journey
+              to complete the journey
             </p>
           </div>
 
           <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-5 h-5 text-indigo-200" />
-              <span className="text-indigo-200 text-sm">Activos ahora</span>
+              <span className="text-indigo-200 text-sm">Active now</span>
             </div>
             <p className="text-3xl font-bold">
               {metrics.totalEmployees - metrics.completed - metrics.delayed}
             </p>
             <p className="text-indigo-300 text-xs mt-1">
-              empleados progresando
+              employees progressing
             </p>
           </div>
         </div>
@@ -399,7 +399,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-amber-500" />
-            <h3 className="font-semibold text-gray-900">Insights y Oportunidades</h3>
+            <h3 className="font-semibold text-gray-900">Insights & Opportunities</h3>
           </div>
           <div className="divide-y divide-gray-100">
             {insights.map((insight, idx) => (
@@ -440,7 +440,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-500" />
-            <h3 className="font-semibold text-gray-900">Distribución por Periodo</h3>
+            <h3 className="font-semibold text-gray-900">Distribution by Period</h3>
           </div>
           <div className="p-5 space-y-4">
             {periodDistribution.map(({ period, count, delayed, atRisk }) => (
@@ -449,7 +449,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
                   <div className="flex items-center gap-2">
                     <Timer className="w-4 h-4 text-gray-400" />
                     <span className="text-sm font-medium text-gray-700">{period.label}</span>
-                    <span className="text-xs text-gray-400">Día {period.offsetDays}</span>
+                    <span className="text-xs text-gray-400">Day {period.offsetDays}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900">{count}</span>
@@ -476,7 +476,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <h3 className="font-semibold text-gray-900">Cuellos de Botella</h3>
+            <h3 className="font-semibold text-gray-900">Bottlenecks</h3>
           </div>
           {bottlenecks.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -490,7 +490,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
                   )} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{block.name}</p>
-                    <p className="text-xs text-gray-500">{period?.label} · {blockMetrics.employeesInBlock} en bloque</p>
+                    <p className="text-xs text-gray-500">{period?.label} · {blockMetrics.employeesInBlock} in block</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {blockMetrics.delayedCount > 0 && (
@@ -512,8 +512,8 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
           ) : (
             <div className="p-8 text-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-              <p className="text-gray-600 font-medium">¡Sin cuellos de botella!</p>
-              <p className="text-sm text-gray-400">Todos los bloques funcionan correctamente</p>
+              <p className="text-gray-600 font-medium">No bottlenecks!</p>
+              <p className="text-sm text-gray-400">All blocks are running smoothly</p>
             </div>
           )}
         </div>
@@ -525,9 +525,9 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-red-500" />
-              <h3 className="font-semibold text-gray-900">Empleados que requieren atención</h3>
+              <h3 className="font-semibold text-gray-900">Employees requiring attention</h3>
             </div>
-            <span className="text-xs text-gray-400">Más tiempo en su bloque actual</span>
+            <span className="text-xs text-gray-400">Most time in current block</span>
           </div>
           <div className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -565,7 +565,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
                           "text-xs font-semibold",
                           progress.status === 'delayed' ? 'text-red-600' : 'text-amber-600'
                         )}>
-                          {daysInCurrentBlock} días
+                          {daysInCurrentBlock} days
                         </span>
                         <span className={cn(
                           "text-xs px-2 py-0.5 rounded-full",
@@ -573,7 +573,7 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
                             ? 'bg-red-200 text-red-700' 
                             : 'bg-amber-200 text-amber-700'
                         )}>
-                          {progress.status === 'delayed' ? 'Retrasado' : 'En riesgo'}
+                          {progress.status === 'delayed' ? 'Delayed' : 'At risk'}
                         </span>
                       </div>
                     </div>
@@ -592,13 +592,13 @@ export function JourneyHealthOverview({ journeyId }: JourneyHealthOverviewProps)
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
               <span className="text-sm text-slate-600">
-                <strong>{journey.periods.length}</strong> periodos
+                <strong>{journey.periods.length}</strong> periods
               </span>
             </div>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-slate-400" />
               <span className="text-sm text-slate-600">
-                <strong>{blocks.length}</strong> bloques
+                <strong>{blocks.length}</strong> blocks
               </span>
             </div>
             <div className="flex items-center gap-2">

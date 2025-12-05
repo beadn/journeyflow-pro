@@ -113,7 +113,7 @@ export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
           <div className="flex items-center gap-1.5 bg-card rounded-lg p-1 border border-border shadow-sm">
             <button
               onClick={() => setLayout('horizontal')}
-              title="Disposición horizontal"
+              title="Horizontal layout"
               className={cn(
                 "p-1.5 rounded-md transition-all",
                 layout === 'horizontal' 
@@ -125,7 +125,7 @@ export function TimelineView({ journey, onBlockEdit }: TimelineViewProps) {
             </button>
             <button
               onClick={() => setLayout('vertical')}
-              title="Disposición vertical"
+              title="Vertical layout"
               className={cn(
                 "p-1.5 rounded-md transition-all",
                 layout === 'vertical' 
