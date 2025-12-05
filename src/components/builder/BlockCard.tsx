@@ -1,7 +1,7 @@
 import { Block } from '@/types/journey';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { cn } from '@/lib/utils';
-import { Clock, ListTodo, GitBranch, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2 } from 'lucide-react';
+import { Clock, ListTodo, GitBranch, Scale, Monitor, Users, Smile, UsersRound, MessageSquare, GraduationCap, Layers, Trash2, Link } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,14 +18,16 @@ interface BlockCardProps {
   block: Block;
   onEdit: () => void;
   isDragging?: boolean;
+  compact?: boolean;
 }
 
-const getCategoryConfig = (category?: string) => {
+export const getCategoryConfig = (category?: string) => {
   switch (category?.toLowerCase()) {
     case 'legal':
       return { 
         borderColor: 'border-l-[hsl(var(--category-legal))]',
         bgColor: 'bg-[hsl(var(--category-legal)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-legal))]',
         textColor: 'text-[hsl(var(--category-legal))]',
         icon: Scale 
       };
@@ -33,6 +35,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-it))]',
         bgColor: 'bg-[hsl(var(--category-it)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-it))]',
         textColor: 'text-[hsl(var(--category-it))]',
         icon: Monitor 
       };
@@ -40,6 +43,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-hr))]',
         bgColor: 'bg-[hsl(var(--category-hr)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-hr))]',
         textColor: 'text-[hsl(var(--category-hr))]',
         icon: Users 
       };
@@ -47,6 +51,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-welcome))]',
         bgColor: 'bg-[hsl(var(--category-welcome)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-welcome))]',
         textColor: 'text-[hsl(var(--category-welcome))]',
         icon: Smile 
       };
@@ -54,6 +59,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-team))]',
         bgColor: 'bg-[hsl(var(--category-team)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-team))]',
         textColor: 'text-[hsl(var(--category-team))]',
         icon: UsersRound 
       };
@@ -61,6 +67,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-feedback))]',
         bgColor: 'bg-[hsl(var(--category-feedback)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-feedback))]',
         textColor: 'text-[hsl(var(--category-feedback))]',
         icon: MessageSquare 
       };
@@ -68,6 +75,7 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-training))]',
         bgColor: 'bg-[hsl(var(--category-training)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-training))]',
         textColor: 'text-[hsl(var(--category-training))]',
         icon: GraduationCap 
       };
@@ -75,13 +83,14 @@ const getCategoryConfig = (category?: string) => {
       return { 
         borderColor: 'border-l-[hsl(var(--category-default))]',
         bgColor: 'bg-[hsl(var(--category-default)/0.08)]',
+        dotColor: 'bg-[hsl(var(--category-default))]',
         textColor: 'text-[hsl(var(--category-default))]',
         icon: Layers 
       };
   }
 };
 
-export function BlockCard({ block, onEdit, isDragging }: BlockCardProps) {
+export function BlockCard({ block, onEdit, isDragging, compact = false }: BlockCardProps) {
   const { getTasksByBlockId, deleteBlock } = useJourneyStore();
   const tasks = getTasksByBlockId(block.id);
   const categoryConfig = getCategoryConfig(block.category);
@@ -92,6 +101,69 @@ export function BlockCard({ block, onEdit, isDragging }: BlockCardProps) {
     deleteBlock(block.id);
   };
 
+  // Compact view - single line like calendar
+  if (compact) {
+    return (
+      <div
+        onClick={onEdit}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer group",
+          "hover:bg-muted/50 transition-colors",
+          isDragging && "opacity-50"
+        )}
+      >
+        {/* Category dot */}
+        <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", categoryConfig.dotColor)} />
+        
+        {/* Block info */}
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground truncate">
+            {block.name}
+          </span>
+          <span className="text-xs text-muted-foreground flex-shrink-0">
+            {tasks.length} tasks
+          </span>
+          {block.rules.length > 0 && (
+            <GitBranch className="w-3 h-3 text-muted-foreground flex-shrink-0" title={`${block.rules.length} rules`} />
+          )}
+          {block.dependencyBlockIds.length > 0 && (
+            <span className="flex items-center gap-0.5 text-xs text-amber-600 flex-shrink-0" title={`Depends on ${block.dependencyBlockIds.length} block(s)`}>
+              <Link className="w-3 h-3" />
+              <span>{block.dependencyBlockIds.length}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Delete button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Block</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{block.name}"? This will also delete all {tasks.length} tasks in this block. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  }
+
+  // Full card view
   return (
     <div
       onClick={onEdit}

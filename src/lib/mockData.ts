@@ -209,7 +209,7 @@ export function generateMockData() {
       location: locations[Math.floor(Math.random() * locations.length)],
       manager: managers[Math.floor(Math.random() * managers.length)],
       startDate: startDate.toISOString(),
-      cohort: `Q${Math.floor(Math.random() * 4) + 1} 2024`,
+      cohort: `Q${Math.floor(Math.random() * 4) + 1} 2025`,
       employeeType: employeeTypes[Math.floor(Math.random() * employeeTypes.length)],
       contractType: contractTypes[Math.floor(Math.random() * contractTypes.length)],
       level: levels[Math.floor(Math.random() * levels.length)],
