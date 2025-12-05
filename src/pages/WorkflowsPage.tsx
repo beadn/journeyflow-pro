@@ -104,14 +104,14 @@ export default function WorkflowsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowAIChat(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-lg shadow-purple-500/25"
+              className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
             >
               <Sparkles className="w-5 h-5" />
               Create with AI
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
+              className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition-all shadow-md hover:shadow-lg"
             >
               <Plus className="w-5 h-5" />
               New Journey

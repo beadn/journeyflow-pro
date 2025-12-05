@@ -897,7 +897,7 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
       <SheetContent side="right" className="w-[520px] sm:max-w-[520px] p-0 flex flex-col">
         {/* Header */}
         <SheetHeader className="p-0">
-          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 px-6 py-4 text-white">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
@@ -939,7 +939,7 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
                 "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
                 message.role === 'user' 
                   ? "bg-indigo-500 text-white" 
-                  : "bg-gradient-to-br from-violet-500 to-purple-600 text-white"
+                  : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
               )}>
                 {message.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
@@ -974,27 +974,27 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
 
                 {/* Journey Preview */}
                 {message.journeyPreview && (
-                  <div className="mt-3 p-3 bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                  <div className="mt-3 p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
                     <div className="flex items-center gap-2 mb-2">
-                      <Layers className="w-4 h-4 text-violet-600" />
-                      <span className="font-semibold text-violet-900 text-sm">{message.journeyPreview.name}</span>
+                      <Layers className="w-4 h-4 text-indigo-600" />
+                      <span className="font-semibold text-indigo-900 text-sm">{message.journeyPreview.name}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="bg-white/60 rounded-lg px-2 py-1.5 text-center">
-                        <div className="font-semibold text-violet-700">{message.journeyPreview.periods.length}</div>
-                        <div className="text-violet-500">periods</div>
+                        <div className="font-semibold text-indigo-700">{message.journeyPreview.periods.length}</div>
+                        <div className="text-indigo-500">periods</div>
                       </div>
                       <div className="bg-white/60 rounded-lg px-2 py-1.5 text-center">
-                        <div className="font-semibold text-violet-700">
+                        <div className="font-semibold text-indigo-700">
                           {message.journeyPreview.periods.reduce((a, p) => a + p.blocks.length, 0)}
                         </div>
-                        <div className="text-violet-500">blocks</div>
+                        <div className="text-indigo-500">blocks</div>
                       </div>
                       <div className="bg-white/60 rounded-lg px-2 py-1.5 text-center">
-                        <div className="font-semibold text-violet-700">
+                        <div className="font-semibold text-indigo-700">
                           {message.journeyPreview.periods.reduce((a, p) => a + p.blocks.reduce((b, bl) => b + bl.tasks.length, 0), 0)}
                         </div>
-                        <div className="text-violet-500">tasks</div>
+                        <div className="text-indigo-500">tasks</div>
                       </div>
                     </div>
                   </div>
@@ -1031,7 +1031,7 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
                       <button
                         key={option.id}
                         onClick={() => handleOptionClick(option.action)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-100 text-violet-700 rounded-full hover:bg-violet-200 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
                       >
                         {option.icon}
                         {option.label}
@@ -1045,12 +1045,12 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
 
           {isTyping && (
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
               <div className="bg-white shadow-sm border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
                   <span className="text-sm text-gray-500">Thinking...</span>
                 </div>
               </div>
@@ -1070,7 +1070,7 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={existingJourney ? "Type to modify this journey..." : "Describe the journey you want to create..."}
-              className="flex-1 h-11 px-4 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              className="flex-1 h-11 px-4 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               disabled={isTyping}
             />
             <button
@@ -1079,7 +1079,7 @@ export function AIJourneyChat({ isOpen, onClose, onJourneyCreated, existingJourn
               className={cn(
                 "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
                 input.trim() && !isTyping
-                  ? "bg-violet-600 text-white hover:bg-violet-700"
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               )}
             >

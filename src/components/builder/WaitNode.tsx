@@ -24,7 +24,7 @@ export const WaitNode = memo(({ data }: WaitNodeProps) => {
       <>
         <div className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-semibold shadow-lg border-2 border-cyan-400">
           <Play className="w-4 h-4" />
-          <span>Inicio del Journey</span>
+          <span>Journey Start</span>
         </div>
         <Handle 
           type="source" 

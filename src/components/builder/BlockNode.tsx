@@ -155,7 +155,7 @@ export const BlockNode = memo(({ data }: BlockNodeProps) => {
           </h3>
           
           <p className="text-xs text-muted-foreground mb-3">
-            {block.description || 'Haz clic para configurar'}
+            {block.description || 'Click to configure'}
           </p>
 
           {/* Tasks preview */}

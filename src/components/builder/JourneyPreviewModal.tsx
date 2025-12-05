@@ -278,7 +278,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                 <Eye className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-semibold">Vista previa del Journey</DialogTitle>
+                <DialogTitle className="text-lg font-semibold">Journey Preview</DialogTitle>
                 <p className="text-sm text-muted-foreground">Simulate tasks based on employee conditions</p>
               </div>
             </div>
@@ -393,7 +393,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   type="text"
                   value={conditions.manager}
                   onChange={(e) => setConditions({ ...conditions, manager: e.target.value })}
-                  placeholder="Nombre del manager"
+                  placeholder="Manager name"
                   className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
@@ -423,7 +423,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
             {/* Expand/Collapse Controls */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20 flex-shrink-0">
               <span className="text-sm font-medium text-gray-700">
-                Timeline del Journey
+                Journey Timeline
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -431,14 +431,14 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
-                  Expandir todo
+                  Expand all
                 </button>
                 <button
                   onClick={collapseAll}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
                   <Minimize2 className="w-3.5 h-3.5" />
-                  Colapsar todo
+                  Collapse all
                 </button>
               </div>
             </div>
@@ -642,7 +642,7 @@ export function JourneyPreviewModal({ isOpen, onClose, journey }: JourneyPreview
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                     <Flag className="w-4 h-4 text-gray-400" />
                   </div>
-                  <span className="text-sm text-gray-400">Fin del Journey</span>
+                  <span className="text-sm text-gray-400">End of Journey</span>
                 </div>
               )}
 

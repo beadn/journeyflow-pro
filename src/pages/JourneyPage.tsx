@@ -131,7 +131,7 @@ export default function JourneyPage() {
                     <span className="text-border">•</span>
                     <span className="flex items-center gap-1 text-indigo-600">
                       <Target className="w-3 h-3" />
-                      {journey.eligibilityCriteria.length} {journey.eligibilityCriteria.length === 1 ? 'filtro' : 'filtros'}
+                      {journey.eligibilityCriteria.length} {journey.eligibilityCriteria.length === 1 ? 'filter' : 'filters'}
                     </span>
                   </>
                 )}
@@ -248,14 +248,14 @@ export default function JourneyPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsAIChatOpen(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm hover:shadow-md"
                 >
                   <Sparkles className="w-4 h-4" />
                   AI Assistant
                 </button>
                 <button
                   onClick={() => setIsPreviewOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                 >
                   <Eye className="w-4 h-4" />
                   Preview
