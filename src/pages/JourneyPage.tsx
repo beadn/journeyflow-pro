@@ -24,7 +24,9 @@ import {
   Pencil,
   Eye,
   Target,
+  Sparkles,
 } from 'lucide-react';
+import { AIJourneyChat } from '@/components/ai/AIJourneyChat';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -58,6 +60,7 @@ export default function JourneyPage() {
   const [isBlockEditorOpen, setIsBlockEditorOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   
   const { 
     journeys,
@@ -173,6 +176,15 @@ export default function JourneyPage() {
                 Monitor
               </button>
             </div>
+
+            {/* AI Assistant */}
+            <button
+              onClick={() => setIsAIChatOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-md shadow-purple-500/20"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Assistant
+            </button>
 
             {/* Actions */}
             <DropdownMenu>
@@ -318,6 +330,13 @@ export default function JourneyPage() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         journey={journey}
+      />
+
+      <AIJourneyChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        onJourneyCreated={() => setIsAIChatOpen(false)}
+        existingJourneyId={journeyId}
       />
     </div>
   );

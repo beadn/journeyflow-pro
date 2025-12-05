@@ -13,9 +13,11 @@ import {
   Zap,
   ChevronRight,
   Filter,
-  Target
+  Target,
+  Sparkles
 } from 'lucide-react';
 import { CreateJourneyModal } from '@/components/builder/CreateJourneyModal';
+import { AIJourneyChat } from '@/components/ai/AIJourneyChat';
 
 type StatusFilter = 'all' | 'active' | 'draft' | 'archived';
 
@@ -23,6 +25,7 @@ export default function WorkflowsPage() {
   const navigate = useNavigate();
   const { journeys, getJourneyMetrics } = useJourneyStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Filter journeys
@@ -57,7 +60,7 @@ export default function WorkflowsPage() {
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type?: string) => {
     switch (type) {
       case 'onboarding': return '🚀';
       case 'offboarding': return '👋';
@@ -98,13 +101,22 @@ export default function WorkflowsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Journeys</h1>
             <p className="text-gray-500 mt-1">Manage your employee lifecycle journeys</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
-          >
-            <Plus className="w-5 h-5" />
-            New Journey
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAIChat(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-lg shadow-purple-500/25"
+            >
+              <Sparkles className="w-5 h-5" />
+              Create with AI
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
+            >
+              <Plus className="w-5 h-5" />
+              New Journey
+            </button>
+          </div>
         </div>
 
         {/* Alerts Section */}
@@ -200,7 +212,7 @@ export default function WorkflowsPage() {
                           {journey.name}
                         </h3>
                         <p className="text-xs text-gray-500 capitalize">
-                          {journey.type.replace('_', ' ')}
+                          {(journey.type || 'custom').replace('_', ' ')}
                         </p>
                       </div>
                     </div>
@@ -360,6 +372,12 @@ export default function WorkflowsPage() {
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)}
         onCreated={handleJourneyCreated}
+      />
+
+      <AIJourneyChat
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        onJourneyCreated={handleJourneyCreated}
       />
     </div>
   );

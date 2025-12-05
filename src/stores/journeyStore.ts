@@ -443,7 +443,7 @@ export const useJourneyStore = create<JourneyStore>()(
       };
     },
     {
-      name: 'journey-store-v2', // Changed to force regeneration with completedAt dates
+      name: 'journey-store-v3', // Changed to force regeneration with type property
       partialize: (state) => ({
         journeys: state.journeys,
         blocks: state.blocks,
