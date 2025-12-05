@@ -160,22 +160,28 @@ const AddedTasksNode = ({ data }: { data: { tasks: Partial<Task>[]; blockTemplat
   </div>
 );
 
-const AddRuleNode = ({ data }: { data: { onClick: () => void } }) => (
-  <div className="relative">
-    <Handle type="target" position={Position.Top} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-top-1" />
-    <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-bottom-1" />
-    <button 
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        data.onClick();
-      }}
-      className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-cyan-300 flex items-center justify-center text-cyan-400 hover:border-cyan-400 hover:text-cyan-500 hover:bg-cyan-50 transition-all shadow-sm cursor-pointer"
-    >
-      <Plus className="w-4 h-4" />
-    </button>
-  </div>
-);
+const AddRuleNode = ({ data }: { data: { onClick: () => void } }) => {
+  return (
+    <div className="relative nopan nodrag nowheel" style={{ pointerEvents: 'all' }}>
+      <Handle type="target" position={Position.Top} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-top-1" />
+      <Handle type="source" position={Position.Bottom} className="!bg-cyan-400 !w-2 !h-2 !border-2 !border-white !-bottom-1" />
+      <button 
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          data.onClick();
+        }}
+        className="w-10 h-10 rounded-full bg-white border-2 border-dashed border-cyan-300 flex items-center justify-center text-cyan-400 hover:border-cyan-500 hover:text-cyan-600 hover:bg-cyan-50 hover:scale-110 transition-all shadow-lg cursor-pointer"
+        style={{ pointerEvents: 'all' }}
+      >
+        <Plus className="w-5 h-5" />
+      </button>
+    </div>
+  );
+};
 
 const nodeTypes = {
   tasksNode: TasksNode,

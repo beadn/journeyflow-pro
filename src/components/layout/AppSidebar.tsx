@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
-  Users, 
   ChevronRight,
   Menu,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -31,12 +31,22 @@ export function AppSidebar() {
       >
         {/* Logo - links to workflows */}
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-          <NavLink to="/workflows" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary-foreground" />
+          <NavLink to="/workflows" className="flex items-center gap-3 group">
+            <div className="relative w-9 h-9">
+              {/* Gradient background - Factorial red */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF6B6B] via-[#FF5252] to-[#E53935] shadow-lg shadow-red-500/30 group-hover:shadow-red-500/50 transition-shadow" />
+              {/* Inner glow */}
+              <div className="absolute inset-[2px] rounded-[10px] bg-gradient-to-br from-white/20 to-transparent" />
+              {/* Icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white drop-shadow-sm" />
+              </div>
             </div>
             {isExpanded && (
-              <span className="font-semibold text-foreground text-sm">Employee Lifecycle</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-foreground text-sm tracking-tight">JourneyFlow</span>
+                <span className="text-[10px] text-muted-foreground -mt-0.5">Employee Lifecycle</span>
+              </div>
             )}
           </NavLink>
         </div>
