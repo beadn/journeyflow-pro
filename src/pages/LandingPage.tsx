@@ -81,6 +81,7 @@ export default function LandingPage() {
   const [hoveredStage, setHoveredStage] = useState<string | null>(null);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [employeeSearch, setEmployeeSearch] = useState('');
+  const [panelTab, setPanelTab] = useState<'journeys' | 'employees'>('journeys');
   
   const [lifecycleConfig] = useState({
     onboardingDays: 90,
@@ -232,10 +233,10 @@ export default function LandingPage() {
                 <Settings2 className="w-4 h-4" />
                 Settings
               </button>
-              <button
+          <button
                 onClick={() => navigate('/workflows')}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all"
-              >
+          >
                 Go to Journeys
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -623,9 +624,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Employee List Side Panel */}
-      <Sheet open={!!selectedStage} onOpenChange={(open) => !open && setSelectedStage(null)}>
-        <SheetContent className="w-[480px] sm:max-w-[480px] p-0 flex flex-col">
+      {/* Stage Detail Side Panel */}
+      <Sheet open={!!selectedStage} onOpenChange={(open) => { if (!open) { setSelectedStage(null); setPanelTab('journeys'); } }}>
+        <SheetContent className="w-[500px] sm:max-w-[500px] p-0 flex flex-col">
           {selectedStageInfo && (
             <>
               {/* Header */}
@@ -633,138 +634,237 @@ export default function LandingPage() {
                 "p-6 bg-gradient-to-r text-white",
                 selectedStageInfo.gradient
               )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                      <selectedStageInfo.icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <SheetTitle className="text-white text-xl">{selectedStageInfo.name}</SheetTitle>
-                      <p className="text-white/80 text-sm">
-                        {lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]} employees
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <selectedStageInfo.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <SheetTitle className="text-white text-xl">{selectedStageInfo.name}</SheetTitle>
+                    <p className="text-white/80 text-sm">
+                      {lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]} employees • {lifecycleData.journeysByStage[selectedStage]?.length || 0} journeys
+                    </p>
                   </div>
                 </div>
               </SheetHeader>
 
-              {/* Search */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search employees..."
-                    value={employeeSearch}
-                    onChange={(e) => setEmployeeSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200">
+                <button
+                  onClick={() => setPanelTab('journeys')}
+                  className={cn(
+                    "flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors",
+                    panelTab === 'journeys' 
+                      ? "text-indigo-600 border-b-2 border-indigo-600" 
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  <GitBranch className="w-4 h-4" />
+                  Journeys ({lifecycleData.journeysByStage[selectedStage]?.length || 0})
+                </button>
+                <button
+                  onClick={() => setPanelTab('employees')}
+                  className={cn(
+                    "flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors",
+                    panelTab === 'employees' 
+                      ? "text-indigo-600 border-b-2 border-indigo-600" 
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  Employees ({lifecycleData.counts[selectedStage as keyof typeof lifecycleData.counts]})
+                </button>
               </div>
 
-              {/* Employee List */}
-              <div className="flex-1 overflow-y-auto p-4">
-                {selectedStageEmployees.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedStageEmployees.map(employee => {
-                      // Find their progress if any
-                      const progress = employeeProgress.find(p => p.employeeId === employee.id);
-                      const journey = progress ? journeys.find(j => j.id === progress.journeyId) : null;
-                      
-                      return (
-                        <div
-                          key={employee.id}
-                          className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
-                          onClick={() => {
-                            if (journey) {
-                              navigate(`/journey/${journey.id}`);
-                            }
-                          }}
-                        >
-                          <div className="flex items-start gap-3">
-                            {/* Avatar */}
-                            <div className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br",
-                              selectedStageInfo.gradient
-                            )}>
-                              {employee.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              {/* Journeys Tab */}
+              {panelTab === 'journeys' && (
+                <div className="flex-1 overflow-y-auto p-4">
+                  {lifecycleData.journeysByStage[selectedStage]?.length > 0 ? (
+                    <div className="space-y-3">
+                      {lifecycleData.journeysByStage[selectedStage].map(journey => {
+                        const metrics = getJourneyMetrics(journey.id);
+                        return (
+                          <div
+                            key={journey.id}
+                            className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100"
+                            onClick={() => navigate(`/journey/${journey.id}`)}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className={cn(
+                                  "w-2 h-2 rounded-full",
+                                  journey.status === 'active' ? 'bg-emerald-500' : 'bg-gray-300'
+                                )} />
+                                <h4 className="font-semibold text-gray-900">{journey.name}</h4>
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-gray-400" />
                             </div>
                             
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{employee.name}</p>
-                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                <span className="flex items-center gap-1">
-                                  <Building2 className="w-3 h-3" />
-                                  {employee.department}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {employee.location}
-                                </span>
+                            {journey.description && (
+                              <p className="text-xs text-gray-500 mb-3 line-clamp-2">{journey.description}</p>
+                            )}
+                            
+                            {/* Metrics */}
+                            <div className="grid grid-cols-4 gap-2 mb-3">
+                              <div className="text-center p-2 bg-white rounded-lg">
+                                <p className="text-lg font-bold text-gray-900">{metrics.totalEmployees}</p>
+                                <p className="text-[10px] text-gray-500">Total</p>
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                                <Mail className="w-3 h-3" />
-                                {employee.email}
+                              <div className="text-center p-2 bg-emerald-50 rounded-lg">
+                                <p className="text-lg font-bold text-emerald-600">{metrics.onTrack}</p>
+                                <p className="text-[10px] text-emerald-600">On track</p>
                               </div>
-                              
-                              {/* Journey info if available */}
-                              {journey && progress && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                  <div className="flex items-center gap-2">
-                                    <GitBranch className="w-3 h-3 text-gray-400" />
-                                    <span className="text-xs text-gray-600">{journey.name}</span>
-                                    <span className={cn(
-                                      "text-[10px] px-1.5 py-0.5 rounded",
-                                      progress.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                                      progress.status === 'at_risk' ? 'bg-amber-100 text-amber-700' :
-                                      progress.status === 'delayed' ? 'bg-red-100 text-red-700' :
-                                      'bg-blue-100 text-blue-700'
-                                    )}>
-                                      {progress.status.replace('_', ' ')}
-                                    </span>
-                                  </div>
-                                </div>
+                              <div className="text-center p-2 bg-amber-50 rounded-lg">
+                                <p className="text-lg font-bold text-amber-600">{metrics.atRisk}</p>
+                                <p className="text-[10px] text-amber-600">At risk</p>
+                              </div>
+                              <div className="text-center p-2 bg-red-50 rounded-lg">
+                                <p className="text-lg font-bold text-red-600">{metrics.delayed}</p>
+                                <p className="text-[10px] text-red-600">Delayed</p>
+                              </div>
+                            </div>
+                            
+                            {/* Progress bar */}
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
+                              {metrics.totalEmployees > 0 && (
+                                <>
+                                  <div 
+                                    className="bg-emerald-500 h-full"
+                                    style={{ width: `${(metrics.onTrack / metrics.totalEmployees) * 100}%` }}
+                                  />
+                                  <div 
+                                    className="bg-amber-500 h-full"
+                                    style={{ width: `${(metrics.atRisk / metrics.totalEmployees) * 100}%` }}
+                                  />
+                                  <div 
+                                    className="bg-red-500 h-full"
+                                    style={{ width: `${(metrics.delayed / metrics.totalEmployees) * 100}%` }}
+                                  />
+                                </>
                               )}
                             </div>
                             
-                            {/* Arrow */}
-                            {journey && (
-                              <ExternalLink className="w-4 h-4 text-gray-300" />
-                            )}
+                            <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                              <span className="capitalize">{journey.status}</span>
+                              <span>{journey.type?.replace('_', ' ')}</span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-                    <Users className="w-12 h-12 mb-2 opacity-50" />
-                    <p className="text-sm">
-                      {employeeSearch ? 'No employees match your search' : 'No employees in this stage'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer with journeys */}
-              {lifecycleData.journeysByStage[selectedStage]?.length > 0 && (
-                <div className="p-4 border-t border-gray-200 bg-gray-50">
-                  <p className="text-xs font-medium text-gray-500 mb-2">Related Journeys</p>
-                  <div className="flex flex-wrap gap-2">
-                    {lifecycleData.journeysByStage[selectedStage].map(journey => (
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                      <GitBranch className="w-12 h-12 mb-3 opacity-50" />
+                      <p className="text-sm font-medium mb-1">No journeys configured</p>
+                      <p className="text-xs text-gray-400 mb-4">Create a journey for this lifecycle stage</p>
                       <button
-                        key={journey.id}
-                        onClick={() => navigate(`/journey/${journey.id}`)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => navigate('/workflows')}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
                       >
-                        <GitBranch className="w-3 h-3" />
-                        {journey.name}
-                        <ExternalLink className="w-3 h-3 text-gray-400" />
+                        <Plus className="w-4 h-4" />
+                        Create Journey
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Employees Tab */}
+              {panelTab === 'employees' && (
+                <>
+                  {/* Search */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search employees..."
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Employee List */}
+                  <div className="flex-1 overflow-y-auto p-4">
+                    {selectedStageEmployees.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedStageEmployees.map(employee => {
+                          const progress = employeeProgress.find(p => p.employeeId === employee.id);
+                          const journey = progress ? journeys.find(j => j.id === progress.journeyId) : null;
+                          
+                          return (
+                            <div
+                              key={employee.id}
+                              className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                              onClick={() => {
+                                if (journey) {
+                                  navigate(`/journey/${journey.id}`);
+                                }
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br",
+                                  selectedStageInfo.gradient
+                                )}>
+                                  {employee.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{employee.name}</p>
+                                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                    <span className="flex items-center gap-1">
+                                      <Building2 className="w-3 h-3" />
+                                      {employee.department}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      {employee.location}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                                    <Mail className="w-3 h-3" />
+                                    {employee.email}
+                                  </div>
+                                  
+                                  {journey && progress && (
+                                    <div className="mt-2 pt-2 border-t border-gray-200">
+                                      <div className="flex items-center gap-2">
+                                        <GitBranch className="w-3 h-3 text-gray-400" />
+                                        <span className="text-xs text-gray-600">{journey.name}</span>
+                                        <span className={cn(
+                                          "text-[10px] px-1.5 py-0.5 rounded",
+                                          progress.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                                          progress.status === 'at_risk' ? 'bg-amber-100 text-amber-700' :
+                                          progress.status === 'delayed' ? 'bg-red-100 text-red-700' :
+                                          'bg-blue-100 text-blue-700'
+                                        )}>
+                                          {progress.status.replace('_', ' ')}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {journey && (
+                                  <ExternalLink className="w-4 h-4 text-gray-300" />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <Users className="w-12 h-12 mb-2 opacity-50" />
+                        <p className="text-sm">
+                          {employeeSearch ? 'No employees match your search' : 'No employees in this stage'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </>
           )}
