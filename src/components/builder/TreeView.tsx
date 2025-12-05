@@ -1399,7 +1399,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
     });
     
     return { nodes, edges };
-  }, [blocks, sortedPeriods, blockTasks, expandedBlocksArray, expandedSubBlocksArray, toggleBlock, toggleSubBlock]);
+  }, [blocks, sortedPeriods, blockTasks, expandedBlocksArray, expandedSubBlocksArray, toggleBlock, toggleSubBlock, handleAddRule, handleUpdateRule, handleDeleteRule, handleUpdateDependencies]);
 
   const handleNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
     if (node.type === 'blockNode') {
@@ -1416,7 +1416,13 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
           nodeTypes={nodeTypes}
           onNodeDoubleClick={handleNodeDoubleClick}
           fitView
-          fitViewOptions={{ padding: 0.2 }}
+          fitViewOptions={{
+            padding: 0.15,
+            maxZoom: 1,
+            minZoom: 0.5,
+            duration: 0,
+            nodes: nodes.slice(0, Math.min(6, nodes.length)), // Focus on first nodes (start + first period)
+          }}
           minZoom={0.1}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
@@ -1444,7 +1450,7 @@ export function TreeView({ journey, onBlockEdit }: TreeViewProps) {
       <div className="absolute top-6 left-6 bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 z-10">
         <div className="text-xs text-gray-500 space-y-1">
           <div><span className="font-medium">Click ▶</span> expand block</div>
-          <div><span className="font-medium">Doble click</span> abrir editor completo</div>
+          <div><span className="font-medium">Double click</span> open full editor</div>
           <div><span className="font-medium">Click + below</span> connect next block</div>
           <div><span className="font-medium">Click + rules</span> add audience rule</div>
         </div>
