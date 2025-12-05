@@ -177,17 +177,6 @@ export default function JourneyPage() {
               </button>
             </div>
 
-            {/* AI Assistant - Only in Builder mode */}
-            {mainTab === 'builder' && (
-              <button
-                onClick={() => setIsAIChatOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-md shadow-purple-500/20"
-              >
-                <Sparkles className="w-4 h-4" />
-                AI Assistant
-              </button>
-            )}
-
             {/* Actions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -256,13 +245,22 @@ export default function JourneyPage() {
                 </button>
               </div>
               
-              <button
-                onClick={() => setIsPreviewOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-              >
-                <Eye className="w-4 h-4" />
-                Preview
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAIChatOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AI Assistant
+                </button>
+                <button
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview
+                </button>
+              </div>
             </div>
           )}
           {mainTab === 'monitor' && (
